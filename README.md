@@ -17,16 +17,91 @@ Three modular, interconnected **AI SkillSets** that together form a complete aut
 
 ## Table of Contents
 
+- [Installation](#installation)
+- [Quick Start](#quick-start)
 - [The Three SkillSets](#the-three-skillsets)
 - [How They Connect](#how-they-connect)
 - [Dev-Design SkillSet](#dev-design-skillset)
 - [Build-Team SkillSet](#build-team-skillset)
 - [Code-Check SkillSet](#code-check-skillset)
 - [End-to-End Pipeline](#end-to-end-pipeline)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
 - [Repository Structure](#repository-structure)
 - [Supporting Files](#supporting-files)
+
+---
+
+## Installation
+
+The SkillSets are organized into three modular groups:
+
+- **Dev-Design_SkillSet** — Design specifications and architecture
+- **Build-Team_SkillSet** — Code implementation and building
+- **Code-Check_SkillSet** — Code review and quality validation
+
+These are **3 separate modules** that can work together or independently. The grouping is due to modularity, so you can pick only Build or only Design or only Review as needed.
+
+**Important:** Do **NOT** copy the top-level `Dev-Design_SkillSet/`, `Build-Team_SkillSet/`, or `Code-Check_SkillSet/` folders. Instead, copy **only the actual skill folders inside them** (e.g. `commander/`, `bob-the-builder/`, `code-review/`, `gatekeeper-build/`, `bug-review/`, etc.) to your agent's skills folder (typically `.agents/skills/`).
+
+### Example for selective installation
+
+```bash
+# Create skills directory
+mkdir -p .agents/skills
+
+# Install only Build-Team module skills
+cp -r Build-Team_SkillSet/build-management .agents/skills/
+cp -r Build-Team_SkillSet/bob-the-builder .agents/skills/
+cp -r Build-Team_SkillSet/test-builder .agents/skills/
+cp -r Build-Team_SkillSet/security-builder .agents/skills/
+cp -r Build-Team_SkillSet/gatekeeper-build .agents/skills/
+cp -r Build-Team_SkillSet/cross-check-build-confirm .agents/skills/
+
+# Similarly for other modules (repeat for desired ones)
+# For Dev-Design:
+# cp -r Dev-Design_SkillSet/commander .agents/skills/
+# ... etc.
+# For tech-stacks if using design: cp -r Dev-Design_SkillSet/tech-stacks .agents/skills/
+```
+
+### For different AI agents
+
+- **Agentic frameworks** supporting skills (Codex, Kilo, etc.): copy to `.agents/skills/`
+- **Claude Code / GitHub Copilot**: copy to `skills/` or reference via instructions
+
+---
+
+## Quick Start
+
+### 1. Get the SkillSets
+
+Clone or download this repository.
+
+### 2. Install Skills (see Installation above for details)
+
+Copy only the inner skill folders to `.agents/skills/` (or equivalent).
+
+### 3. Configure Your AI Agent
+
+**For frameworks that auto-detect skills:** The `SKILL.md` files contain metadata for routing.
+
+**Claude Code** — Add to your `CLAUDE.md` or instructions:
+```markdown
+Use the TykoDev AI SkillSets from the skills/ directory. Read the appropriate SKILL.md files for design, build, or review tasks.
+```
+
+**GitHub Copilot** — Add to `.github/copilot-instructions.md`:
+```markdown
+## AI SkillSets
+Use skills from the `.agents/skills/` or `skills/` folder. Read relevant SKILL.md before tasks.
+```
+
+### 4. Start Using
+
+```
+"Use commander skill to design a new application"
+"Build this from the design using build-management"
+"Perform a full code review"
+```
 
 ---
 
@@ -292,85 +367,10 @@ Each SkillSet works independently. Common standalone scenarios:
 
 ### Using Individual Skills
 
-Every skill can be invoked directly by referencing its `SKILL.md` file:
+Every skill can be invoked directly by referencing its `SKILL.md` file (after copying the skill folder to your skills directory):
 
 ```
-"Read skills/[skillset]/[skill]/SKILL.md and [task description]"
-```
-
----
-
-## Quick Start
-
-### 1. Get the SkillSets
-
-Clone or download the repository containing the SkillSet directories.
-
-### 2. Copy Into Your Project
-
-Copy the SkillSet folders you need into your project workspace:
-
-```bash
-# All three SkillSets
-cp -r Code-Check_SkillSet/  your-project/skills/
-cp -r Dev-Design_SkillSet/  your-project/skills/
-cp -r Build-Team_SkillSet/  your-project/skills/
-
-# Or just the one you need
-cp -r Code-Check_SkillSet/  your-project/skills/
-```
-
-### 3. Configure Your AI Agent
-
-**Claude Code** — Add to your `CLAUDE.md`:
-```markdown
-## AI SkillSets
-This project uses the TykoDev AI SkillSets:
-- For design: read `skills/Dev-Design_SkillSet/commander/SKILL.md`
-- For building: read `skills/Build-Team_SkillSet/build-management/SKILL.md`
-- For review: read `skills/Code-Check_SkillSet/[skill]/SKILL.md`
-```
-
-**GitHub Copilot** — Add to `.github/copilot-instructions.md`:
-```markdown
-## AI SkillSets
-Use `@workspace` and read the appropriate SKILL.md from `skills/` before performing design, build, or review tasks.
-```
-
-**Agentic Frameworks (Codex, Kilo Code, OpenCode)** — Copy skill folders into the framework's skills directory (`.agents/skills/`, `.codex/skills/`, etc.) for automatic routing.
-
-### 4. Start Using
-
-```
-"Design a new e-commerce platform"              → Dev-Design pipeline
-"Implement this design specification"            → Build-Team pipeline
-"Find bugs in the authentication module"         → Code-Check bug-review
-"Do a full code review of this PR"               → Code-Check full pipeline
-```
-
----
-
-## Installation
-
-### Standard AI Assistants (Claude Code, GitHub Copilot)
-
-These tools do not auto-route to skill files. Provide context by:
-1. Copying skill folders into your workspace
-2. Referencing the appropriate `SKILL.md` in your system instructions or chat context
-3. Explicitly asking the agent to read the SKILL.md before performing tasks
-
-### Agentic Frameworks (Codex, Kilo Code, OpenCode)
-
-These frameworks natively recognize skill directory structures:
-1. Copy skill folders into the framework's configured skills directory
-2. The framework parses frontmatter metadata and routes requests based on trigger phrases
-3. Simply ask naturally — the framework selects the right skill
-
-### Verification
-
-After installation, verify by asking:
-```
-"What skills do you have available?"
+"Read skills/commander/SKILL.md and [task description]"
 ```
 
 ---
