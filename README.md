@@ -4,7 +4,7 @@
   <em>Modular AI agent skill libraries for autonomous software design, implementation, and review</em>
 </p>
 
-# TykoDev AI SkillSets
+# AI SkillSets
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
 > **License:** See individual SkillSet repositories for license details
@@ -86,7 +86,7 @@ Copy only the inner skill folders to `.agents/skills/` (or equivalent).
 
 **Claude Code** — Add to your `CLAUDE.md` or instructions:
 ```markdown
-Use the TykoDev AI SkillSets from the skills/ directory. Read the appropriate SKILL.md files for design, build, or review tasks.
+Use the AI SkillSets from the skills/ directory. Read the appropriate SKILL.md files for design, build, or review tasks.
 ```
 
 **GitHub Copilot** — Add to `.github/copilot-instructions.md`:
@@ -515,5 +515,5 @@ Challenges follow a **2-round maximum** — after Round 2, unresolved items are 
 ---
 
 <p align="center">
-  <sub>Built by <a href="https://github.com/TykoDev">TykoDev</a> · TykoDev AI SkillSets</sub>
+  <sub>Built by <a href="https://github.com/TykoDev">TykoDev</a> · AI SkillSets</sub>
 </p>
