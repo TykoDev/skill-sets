@@ -7,10 +7,11 @@
 # Dev-Design SkillSet
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
-> **Repository:** [`TykoDev/Dev-Design_SkillSet`](https://github.com/TykoDev/Dev-Design_SkillSet)
 > **License:** See repository for license details
 
-A modular suite of **seven specialized AI skills plus a tech-stack library** that orchestrates a fully autonomous software design specification workflow. Designed to plug into any AI coding agent that supports skill/tool folders — including **Codex**, **Claude Code**, **GitHub Copilot**, **Kilo Code**, and **OpenCode**.
+A modular suite of **seven specialized AI skills plus a tech-stack library** that orchestrates a fully autonomous software design specification workflow. This README assumes the combined **AI SkillSets** repository is your primary install path, while still staying usable if this SkillSet is published as a separate mirror.
+
+The canonical install rule is the same in both cases: copy the **inner skill folders** into your agent's skills directory, include `tech-stacks/` when you want the stack templates available, and start with the `commander` entry point. If your assistant does not auto-route installed skills, explicitly reference the relevant `<skill>/SKILL.md` file as a fallback.
 
 ---
 
@@ -31,11 +32,6 @@ A modular suite of **seven specialized AI skills plus a tech-stack library** tha
 - [How the Skills Connect](#how-the-skills-connect)
 - [Step-by-Step Usage](#step-by-step-usage)
 - [Installation Guide](#installation-guide)
-  - [Codex](#codex)
-  - [Claude Code](#claude-code)
-  - [GitHub Copilot](#github-copilot)
-  - [Kilo Code](#kilo-code)
-  - [OpenCode](#opencode)
 - [Directory Structure](#directory-structure)
 - [Contributing](#contributing)
 
@@ -307,25 +303,26 @@ The Dev-Design SkillSet includes a `tech-stacks` library holding 14 different st
 
 ## Step-by-Step Usage
 
-> **Important Context Note:** How these skills activate depends entirely on your AI agent. In **Agentic Frameworks** (like specific Codex or Kilo configurations), you prompt the entrypoint. In **Standard LLM Assistants** (like Claude Code or GitHub Copilot), you must explicitly reference the relevant `SKILL.md` file as context first.
+> **Activation note:** The canonical entry point is `commander`. In agentic frameworks that auto-route installed skills, prompt that entry point directly. In assistants that do not auto-route skills, reference `commander/SKILL.md` or another specific skill file explicitly as a fallback.
 
 ### Running the Full Autonomous Workflow (Agentic Frameworks)
 
-1. **Open your AI coding agent** (Codex, Kilo Code, or OpenCode).
-2. **Request the commander to start:**
+1. **Install the inner skill folders** in your configured skills directory.
+2. **Open your AI coding agent** (Codex, Kilo Code, or OpenCode).
+3. **Request the `commander` entry point:**
    ```
    "Use the commander skill to design a new serverless booking system"
    ```
-3. The `commander` activates the `researcher`.
-4. The `gatekeeper-design` checks outputs automatically behind the scenes.
-5. You receive a fully specified, architecturally sound design package.
+4. The `commander` skill activates the `researcher`.
+5. The `gatekeeper-design` skill checks outputs automatically behind the scenes.
+6. You receive a fully specified, architecturally sound design package.
 
 ### Running a Single Skill
 
 You can bypass the `commander` and target a specific discipline directly:
 
 1. **Provide context (if required by your agent):** Explicitly attach or reference the relevant `SKILL.md` file (e.g., `@workspace`, or dragging the file into chat).
-2. **Ask for a specific review type** using natural language:
+2. **Ask for a specific design task** using natural language:
    - `"Use researcher/SKILL.md to map bounded contexts for an e-commerce platform"` 
    - `"Read architect/SKILL.md and generate a C4 diagram for my current codebase"` 
    - `"Run gatekeeper-design/SKILL.md to fiercely validate the attached SRS document"` 
@@ -335,40 +332,56 @@ You can bypass the `commander` and target a specific discipline directly:
 
 ## Installation Guide
 
-Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory.
+Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory. To install them, copy the **inner skill folders** from `Dev-Design_SkillSet/` into the skills directory your agent is configured to read. Copy `tech-stacks/` as well when you want the 14 stack templates available to the design flow.
 
-### Prerequisites
+This README assumes you are working from the combined AI SkillSets repository. If you are using a separately published mirror of this SkillSet, the same install rule applies; only the surrounding repo path changes.
 
-```bash
-git clone https://github.com/TykoDev/Dev-Design_SkillSet.git
-```
+### Canonical Install Rule
 
-### Standard AI Assistants (Claude Code & GitHub Copilot)
+Copy these folders, not the top-level `Dev-Design_SkillSet/` directory:
 
-These tools do **not** auto-route between skills natively. You must provide them contextually.
+- `commander/`
+- `researcher/`
+- `planner/`
+- `architect/`
+- `designer/`
+- `engineer/`
+- `gatekeeper-design/`
+- `tech-stacks/`
+
+Use `.agents/skills/` when your environment supports a shared skills directory, or the configured equivalent for your assistant.
+
+### Standard Assistants (Claude Code and GitHub Copilot)
+
+These assistants do **not** always auto-route to installed skill files. Keep the same copied folders in an accessible location, then point the assistant at the right entry point or fallback `SKILL.md` file.
 
 #### Claude Code
-1. Copy the directories into your workspace (e.g., `.claude/skills/`).
+Claude Code does not use a guaranteed native skills directory, so the important part is keeping the copied folders somewhere your project instructions can reference consistently.
+
+1. Copy the installed Dev-Design skill folders into a location your workspace can reference, such as `.agents/skills/` or `.claude/skills/`.
 2. Add a reference in your **`CLAUDE.md`**:
    ```markdown
    ## Design Skills
-   This project uses the Dev-Design SkillSet. To generate specifications, always read `.claude/skills/commander/SKILL.md` first. For isolated tasks, read the respective `.claude/skills/[skill]/SKILL.md`.
+   This project uses the Dev-Design SkillSet. Start design work with the commander entry point. If Claude does not auto-route the installed skill, read `.agents/skills/commander/SKILL.md` first.
    ```
 
 #### GitHub Copilot
-1. Copy the skill directories into your workspace (e.g., `.github/skills/`).
+GitHub Copilot does not guarantee automatic routing from a custom skills folder.
+
+1. Copy the installed Dev-Design skill folders into a location your repository instructions can reference.
 2. Reference them in **`.github/copilot-instructions.md`**:
    ```markdown
    ## Software Design Spec
-   Use `@workspace` and follow `.github/skills/commander/SKILL.md` when designing new features or architectures.
+   When asked to design new features or architectures, start with commander. If Copilot does not auto-route the installed skill, use `@workspace` and follow `.agents/skills/commander/SKILL.md`.
    ```
 
 ### Agentic Frameworks (Codex, Kilo Code, OpenCode)
 
 If you are using a dedicated agentic runner:
-1. Create the environment's skills directory `mkdir -p .agents/skills`
-2. Copy the individual folders (`architect`, `commander`, etc.) into that directory.
-3. The framework will automatically parse the frontmatter and route you when you trigger a design workflow.
+1. Create the environment's skills directory, typically `.agents/skills/` or the framework-specific equivalent.
+2. Copy the individual folders (`commander`, `researcher`, and the rest) into that directory, plus `tech-stacks/` when you want the template library available.
+3. Prompt the `commander` entry point directly.
+4. If the framework does not auto-route as expected, fall back to `commander/SKILL.md`.
 
 ---
 
@@ -427,7 +440,7 @@ Contributions are welcome! To improve templates or add tech stacks:
 3. Make your changes
 4. Submit a pull request
 
-For questions or suggestions, open an issue on the [GitHub repository](https://github.com/TykoDev/Dev-Design_SkillSet).
+For questions or suggestions, open an issue or discussion in the repository where you found this SkillSet.
 
 ---
 

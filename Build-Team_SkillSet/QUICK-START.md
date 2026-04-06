@@ -1,35 +1,46 @@
 # Build-Team SkillSet: Quick Start
 
-A suite of 6 specialized AI skills that orchestrate standard AI coding assistants into an autonomous code implementation team — from design specs to production-ready, tested, security-audited code.
+Use this SkillSet when you already have an approved plan or design package and want the implementation pipeline to build, test, audit, and complete the codebase.
 
-## 1. Installation
+## 1. Pick This SkillSet
 
-Instead of installing software, you provide these folders as **context** to your AI agent so it learns how to autonomously coordinate and perform implementation tasks.
+Choose **Build-Team_SkillSet** when you want:
 
-1. Clone or download this repository.
-2. Copy the skill folders into your project workspace (e.g., `skills/`).
-3. **Tell your AI where to look:**
-   - **Claude Code:** Add to `CLAUDE.md`: *"Read `skills/build-management/SKILL.md` to initiate the build pipeline."*
-   - **GitHub Copilot:** Add to `.github/copilot-instructions.md`: *"Use `@workspace` and read `skills/build-management/SKILL.md` for implementation tasks."*
-   - **Agentic Frameworks (Codex, Kilo):** Drop them into `.agents/skills/` (or the specific configured folder) for auto-routing.
+- `build-management` to orchestrate the full build pipeline
+- `bob-the-builder` for direct implementation work
+- `test-builder`, `security-builder`, or `cross-check-build-confirm` for focused follow-up tasks
 
-## 2. Usage
+## 2. Copy the Inner Skill Folders
 
-To trigger the full build pipeline, start with the orchestrator (`build-management`). Alternatively, target a single skill for specific tasks.
+Copy the actual skill folders from `Build-Team_SkillSet/` into your agent's skills directory, usually `.agents/skills/` or the configured equivalent.
 
-**Prompting Examples:**
-* *"Read `skills/build-management/SKILL.md` and implement this design specification for a REST API."*
-* *"Read `skills/bob-the-builder/SKILL.md` and implement the user authentication module."*
-* *"Read `skills/test-builder/SKILL.md` and write comprehensive tests for the order service."*
-* *"Read `skills/security-builder/SKILL.md` and audit this codebase for vulnerabilities."*
-* *"Read `skills/cross-check-build-confirm/SKILL.md` and verify no placeholder code remains."*
+Do **not** copy the top-level `Build-Team_SkillSet/` folder itself.
 
-*(If using an Agentic Framework that natively auto-routes skills based on folder structure, you can simply ask naturally: "Build this project from the design spec").*
+Typical folders to copy:
 
-### The 6 Skills
-1. **build-management:** Pipeline orchestrator that delegates phases and compiles the final build package.
-2. **bob-the-builder:** Senior development engineer that writes production-ready code from design specs.
-3. **test-builder:** Test engineering specialist that creates comprehensive, meaningful test suites.
-4. **security-builder:** Code security auditor that maps vulnerabilities to OWASP, CWE, and NIST standards.
-5. **gatekeeper-build:** Adversarial meta-reviewer that challenges every phase output before the pipeline advances.
-6. **cross-check-build-confirm:** Completeness scanner that ensures zero TODOs, placeholders, or scaffold code ship to production.
+- `build-management/`
+- `bob-the-builder/`
+- `test-builder/`
+- `security-builder/`
+- `gatekeeper-build/`
+- `cross-check-build-confirm/`
+
+## 3. Start With the Entry Point
+
+The canonical entry point is `build-management`.
+
+Example prompts:
+
+```text
+Use /build-management to implement this approved design specification.
+
+Build this project from the design spec.
+
+Use build-management to implement this plan, then validate completeness before delivery.
+```
+
+If your assistant does not auto-route installed skills, reference the fallback file directly:
+
+```text
+Read build-management/SKILL.md and implement this approved design specification.
+```

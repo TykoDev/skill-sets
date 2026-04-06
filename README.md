@@ -4,20 +4,44 @@
   <em>Modular AI agent skill libraries for autonomous software design, implementation, and review</em>
 </p>
 
+<p align="center">
+  <a href="https://youtu.be/NE5zkgg04pQ" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.youtube.com/vi/NE5zkgg04pQ/maxresdefault.jpg" alt="Watch the AI SkillSets video overview" width="720" />
+  </a>
+  <br/>
+  <sub>Click the preview to watch the video walkthrough</sub>
+</p>
+
 # AI SkillSets
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
-> **License:** See individual SkillSet repositories for license details
 
-Three modular, interconnected **AI SkillSets** that together form a complete autonomous software development pipeline — from initial idea to production-ready, security-audited, quality-verified code. Each SkillSet contains specialized AI skills that plug into any agent supporting skill/tool folders: **Codex**, **Claude Code**, **GitHub Copilot**, **Kilo Code**, and **OpenCode**.
+I’ve been experimenting with orchestrating AI skills into practical **SkillSets** for three parts of software work:
 
-**18 skills. 43 reference documents. 14 tech-stack templates. One unified pipeline.**
+- planning and design
+- building and implementation
+- code review
+
+This setup has worked well for me so far. I’m sure it’s not perfect, but I wanted something that felt straightforward and actually usable without pulling in a bunch of extra framework ideas I didn’t need.
+
+I also didn’t find much out there that matched this style without a lot of added overhead. Tools like larger "do everything" stacks can be interesting, but I wanted something simpler: pick one of three groups, drop the skills in, and start using them. No extra "agree to send data" steps, no platform lock-in, and no hidden magic.
+
+If you try it and have feedback, I’d genuinely love to hear it.
+
+**What you get:**
+
+- **Dev-Design_SkillSet** for turning rough ideas into a structured plan
+- **Build-Team_SkillSet** for delegating implementation work
+- **Code-Check_SkillSet** for targeted code review and validation
+- Plain Markdown skill files that are easy to inspect yourself
+- Extensive docs and stack-aware planning guidance
 
 ---
 
 ## Table of Contents
 
 - [Installation](#installation)
+- [How to Read These Docs](#how-to-read-these-docs)
 - [Quick Start](#quick-start)
 - [The Three SkillSets](#the-three-skillsets)
 - [How They Connect](#how-they-connect)
@@ -26,106 +50,133 @@ Three modular, interconnected **AI SkillSets** that together form a complete aut
 - [Code-Check SkillSet](#code-check-skillset)
 - [End-to-End Pipeline](#end-to-end-pipeline)
 - [Repository Structure](#repository-structure)
-- [Supporting Files](#supporting-files)
 
 ---
 
 ## Installation
 
-The SkillSets are organized into three modular groups:
+The repo is split into **three separate SkillSet groups**. You can install one, two, or all three depending on how you want to work.
 
-- **Dev-Design_SkillSet** — Design specifications and architecture
-- **Build-Team_SkillSet** — Code implementation and building
-- **Code-Check_SkillSet** — Code review and quality validation
+- **Dev-Design_SkillSet** — planning, requirements, architecture, and implementation design
+- **Build-Team_SkillSet** — implementation, testing, security checks, and build validation
+- **Code-Check_SkillSet** — bug finding, code review, quality review, and security review
 
-These are **3 separate modules** that can work together or independently. The grouping is due to modularity, so you can pick only Build or only Design or only Review as needed.
+The goal is to keep setup simple: copy the skills you want into your agent’s skills folder and use them directly.
 
-**Important:** Do **NOT** copy the top-level `Dev-Design_SkillSet/`, `Build-Team_SkillSet/`, or `Code-Check_SkillSet/` folders. Instead, copy **only the actual skill folders inside them** (e.g. `commander/`, `bob-the-builder/`, `code-review/`, `gatekeeper-build/`, `bug-review/`, etc.) to your agent's skills folder (typically `.agents/skills/`).
+**Important:** copy the **actual skill folders inside each SkillSet**, not the top-level group folder itself.
 
-### Example for selective installation
+For example, copy folders like:
 
-```bash
-# Create skills directory
-mkdir -p .agents/skills
+- `commander/`
+- `build-management/`
+- `bug-review/`
+- `quality-review/`
+- `gatekeeper-build/`
+- `gatekeeper-code/`
 
-# Install only Build-Team module skills
-cp -r Build-Team_SkillSet/build-management .agents/skills/
-cp -r Build-Team_SkillSet/bob-the-builder .agents/skills/
-cp -r Build-Team_SkillSet/test-builder .agents/skills/
-cp -r Build-Team_SkillSet/security-builder .agents/skills/
-cp -r Build-Team_SkillSet/gatekeeper-build .agents/skills/
-cp -r Build-Team_SkillSet/cross-check-build-confirm .agents/skills/
+into your agent’s skills directory such as `.agents/skills/`.
 
-# Similarly for other modules (repeat for desired ones)
-# For Dev-Design:
-# cp -r Dev-Design_SkillSet/commander .agents/skills/
-# ... etc.
-# For tech-stacks if using design: cp -r Dev-Design_SkillSet/tech-stacks .agents/skills/
-```
+This means you can stay lightweight:
 
-### For different AI agents
+- only install design skills if you want planning help
+- only install build skills if you already have a plan
+- only install review skills if you just want code checks
 
-- **Agentic frameworks** supporting skills (Codex, Kilo, etc.): copy to `.agents/skills/`
-- **Claude Code / GitHub Copilot**: copy to `skills/` or reference via instructions
+No extra framework is required beyond whatever skill-capable agent setup you already use.
+
+---
+
+## How to Read These Docs
+
+This repository is the **primary install path** for the SkillSets, so the root README is the canonical setup guide.
+
+The per-SkillSet `README.md` and `QUICK-START.md` files are still written to work if a SkillSet is published separately. In those mirror cases, the install rule and entry points stay the same, but the top-level clone path and surrounding repo layout may differ.
 
 ---
 
 ## Quick Start
 
-### 1. Get the SkillSets
+### 1. Pick a SkillSet
 
-Clone or download this repository.
+Choose the group that matches what you need right now:
 
-### 2. Install Skills (see Installation above for details)
+- want a plan: use **Dev-Design_SkillSet**
+- want code built: use **Build-Team_SkillSet**
+- want code reviewed: use **Code-Check_SkillSet**
 
-Copy only the inner skill folders to `.agents/skills/` (or equivalent).
+### 2. Copy the skills you want
 
-### 3. Configure Your AI Agent
+Copy the inner skill folders into your agent’s skills directory, usually `.agents/skills/`.
 
-**For frameworks that auto-detect skills:** The `SKILL.md` files contain metadata for routing.
+### 3. Start with the right entry point
 
-**Claude Code** — Add to your `CLAUDE.md` or instructions:
-```markdown
-Use the AI SkillSets from the skills/ directory. Read the appropriate SKILL.md files for design, build, or review tasks.
+Use one of these:
+
+- **Dev-Design_SkillSet:** talk to `/commander`
+- **Build-Team_SkillSet:** talk to `/build-management`
+- **Code-Check_SkillSet:** talk directly to the review skill you want, such as `bug-review`, `quality-review`, or `security-review`
+
+### Example prompts
+
+```text
+Use /commander to turn this product idea into a build-ready plan.
+
+Use /build-management to implement this approved plan.
+
+Run bug-review and security-review on this codebase.
 ```
 
-**GitHub Copilot** — Add to `.github/copilot-instructions.md`:
-```markdown
-## AI SkillSets
-Use skills from the `.agents/skills/` or `skills/` folder. Read relevant SKILL.md before tasks.
-```
+That’s the whole idea: pick the group, install the skills, and use the entry point that fits the job.
 
-### 4. Start Using
-
-```
-"Use commander skill to design a new application"
-"Build this from the design using build-management"
-"Perform a full code review"
-```
+If your assistant does **not** auto-route skills, use the same entry point concept but reference the relevant `<skill>/SKILL.md` file explicitly as a fallback.
 
 ---
 
 ## The Three SkillSets
 
-| SkillSet | Purpose | Skills | Architecture |
-|---|---|---|---|
-| [**Dev-Design**](#dev-design-skillset) | Design specifications — from idea to architecture | 7 skills + 14 tech-stack templates | Orchestrator-led pipeline |
-| [**Build-Team**](#build-team-skillset) | Code implementation — from design to production code | 6 skills | Orchestrator-led pipeline |
-| [**Code-Check**](#code-check-skillset) | Code review — multi-dimensional quality validation | 5 skills | Hub-and-spoke |
+### Dev-Design_SkillSet
 
-Each SkillSet is **self-contained** and can be used independently. When used together, they form a complete pipeline where the output of one SkillSet feeds directly into the next.
+Start with **`/commander`** and give it your idea, context, constraints, and goals. It will coordinate the planning and design flow for you and produce a structured plan.
 
-### Shared Design Principles
+Best for:
 
-Every SkillSet follows the same foundational conventions:
+- new app ideas
+- feature design
+- architecture planning
+- requirements and implementation specs
 
-| Principle | How It Is Applied |
-|---|---|
-| **Separation of Concerns** | Each skill owns exactly one responsibility — no overlap between skills |
-| **Adversarial Validation** | Every SkillSet includes a dedicated Gatekeeper that challenges outputs before delivery |
-| **Framework-Anchored** | All findings and decisions map to industry standards (IEEE, ISO, OWASP, CWE, NIST, CVSS) |
-| **Evidence-Based** | Every claim requires file paths, line numbers, code references, or spec traceability |
-| **Progressive Disclosure** | Lean SKILL.md bodies (~1,200-1,800 words) with detailed reference files (~1,200-2,000 words) |
+### Build-Team_SkillSet
+
+Hand your approved plan to **`/build-management`** and let it manage implementation. This SkillSet is designed to take the design output and push it through coding, testing, security review, and completeness checks.
+
+Best for:
+
+- building from an existing plan
+- delegating implementation
+- adding tests and validation
+- making sure the build output is actually complete
+
+### Code-Check_SkillSet
+
+This group intentionally does **not** have a single organizer skill. Instead, you talk directly to the review skill that matches what you need.
+
+Examples:
+
+- `bug-review`
+- `code-review`
+- `quality-review`
+- `security-review`
+
+That gives you more flexibility when you only want one kind of review instead of a full pipeline.
+
+### Shared Traits
+
+All three SkillSets follow the same general philosophy:
+
+- each group includes a `gatekeeper-` skill that acts as an adversarial reviewer
+- the design/planning side combines **14 tech-stack templates** with stack-agnostic requirements like auth, validation, encryption, and operational concerns
+- everything is written in **plain Markdown**
+- the documentation is meant to be readable and easy to verify for yourself
 
 ---
 
@@ -373,6 +424,8 @@ Every skill can be invoked directly by referencing its `SKILL.md` file (after co
 "Read skills/commander/SKILL.md and [task description]"
 ```
 
+That manual `SKILL.md` pattern is a fallback for assistants that do not auto-route skills from the installed folders.
+
 ---
 
 ## Repository Structure
@@ -380,8 +433,6 @@ Every skill can be invoked directly by referencing its `SKILL.md` file (after co
 ```
 /
 ├── README.md                              # This file — root guidance
-├── AGENTS.md                              # Senior Development Architect persona
-│
 ├── Code-Check_SkillSet/                   # Code review (5 skills)
 │   ├── README.md
 │   ├── QUICK-START.md
@@ -462,33 +513,7 @@ Every skill can be invoked directly by referencing its `SKILL.md` file (after co
 │   └── cross-check-build-confirm/         # Implementation completeness scanner
 │       ├── SKILL.md
 │       └── references/                    # scaffold-detection, completeness-checklist
-│
-└── _BUILD/                                # Skill development tooling
-    ├── review-agent.md                    # Base review agent template
-    └── .skills/
-        ├── Create_SKILL.md                # Skill creation guide
-        └── skill-reviewer.md              # Skill quality reviewer
 ```
-
----
-
-## Supporting Files
-
-### AGENTS.md
-
-The `AGENTS.md` file at the repository root defines a **Senior Development Architect** persona with an initialization protocol, documentation-first workflow, and multi-agent coordination rules. It provides the overarching agent behavior that complements the specialized skills within each SkillSet.
-
-### _BUILD Directory
-
-The `_BUILD/` directory contains tooling for creating and reviewing new skills:
-
-| File | Purpose |
-|---|---|
-| `review-agent.md` | Base template for adversarial review agents (Gatekeepers are derived from this) |
-| `.skills/Create_SKILL.md` | Step-by-step guide for creating new skills following SkillSet conventions |
-| `.skills/skill-reviewer.md` | Quality reviewer that validates new skills against standards |
-
-These tools are used during SkillSet development, not during normal operation.
 
 ---
 

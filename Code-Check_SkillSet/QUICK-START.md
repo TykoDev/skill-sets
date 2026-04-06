@@ -1,33 +1,48 @@
 # Code-Check SkillSet: Quick Start
 
-A suite of 5 adversarial code review skills that integrate with your AI coding assistant. 
+Use this SkillSet when you want targeted code review. Unlike the other two SkillSets, there is no single orchestrator entry point for ordinary review work.
 
-## 1. Installation
+## 1. Pick This SkillSet
 
-Instead of installing software, you provide these folders as **context** to your AI agent so it learns how to perform specialized code reviews.
+Choose **Code-Check_SkillSet** when you want:
 
-1. Clone or download this repository.
-2. Copy the skill folders into your project workspace (e.g., `skills/`).
-3. **Tell your AI where to look:**
-   - **Claude Code:** Add to `CLAUDE.md`: *"Read `skills/[skill]/SKILL.md` before performing reviews."*
-   - **GitHub Copilot:** Add to `.github/copilot-instructions.md`: *"Use `@workspace` and read `skills/[skill]/SKILL.md` before reviewing."*
-   - **Agentic Frameworks (Codex, Kilo):** Drop them into `.agents/skills/` (or the specific configured folder) for auto-routing.
+- `bug-review` for correctness defects
+- `code-review` for overall merge-readiness
+- `quality-review` for maintainability and architecture drift
+- `security-review` for exploitability and security findings
 
-## 2. Usage
+`gatekeeper-code` validates review reports, but it is **not** the default starting point for ordinary reviews.
 
-To trigger a review, ensure your AI reads the instructions (`SKILL.md`) for that specific skill.  
+## 2. Copy the Inner Skill Folders
 
-**Prompting Examples:**
-* *"Read `skills/bug-review/SKILL.md` and find bugs in this file."*
-* *"Read `skills/security-review/SKILL.md` and check this code for vulnerabilities."*
-* *"Using the `quality-review` skillset, assess the maintainability of this PR."*
-* *"Read `skills/gatekeeper-code/SKILL.md` and validate these review findings."*
+Copy the actual skill folders from `Code-Check_SkillSet/` into your agent's skills directory, usually `.agents/skills/` or the configured equivalent.
 
-*(If using an Agentic Framework that natively auto-routes skills based on folder structure, you can simply ask naturally: "Find bugs in this code").*
+Do **not** copy the top-level `Code-Check_SkillSet/` folder itself.
 
-### The 5 Skills
-1. **bug-review:** Finds crashes, data corruption, and correctness defects.
-2. **code-review:** Assesses overall PR merge-readiness across 8 dimensions.
-3. **quality-review:** Detects tech debt, architectural drift, and efficiency issues.
-4. **security-review:** Maps vulnerabilities to OWASP, CWE, and checks exploitability.
-5. **gatekeeper-code:** Adversarial meta-reviewer that challenges other reports for accuracy before you see them.
+Typical folders to copy:
+
+- `bug-review/`
+- `code-review/`
+- `quality-review/`
+- `security-review/`
+- `gatekeeper-code/`
+
+## 3. Start With the Right Review Skill
+
+Start with the review skill that matches the job.
+
+Example prompts:
+
+```text
+Run bug-review on this codebase.
+
+Review this PR with code-review.
+
+Use security-review to check this service for vulnerabilities.
+```
+
+If your assistant does not auto-route installed skills, reference the fallback file directly:
+
+```text
+Read bug-review/SKILL.md and find bugs in this file.
+```

@@ -7,10 +7,11 @@
 # Code-Check SkillSet
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
-> **Repository:** [`TykoDev/Code-Check_SkillSet`](https://github.com/TykoDev/Code-Check_SkillSet)
 > **License:** See repository for license details
 
-A modular suite of **five interconnected AI coding skills** that provide systematic, evidence-based code review with adversarial validation. Designed to plug into any AI coding agent that supports skill/tool folders — including **Codex**, **Claude Code**, **GitHub Copilot**, **Kilo Code**, and **OpenCode**.
+A modular suite of **five interconnected AI coding skills** that provide systematic, evidence-based code review with adversarial validation. This README assumes the combined **AI SkillSets** repository is your primary install path, while still staying usable if this SkillSet is published as a separate mirror.
+
+The canonical install rule is the same in both cases: copy the **inner skill folders** into your agent's skills directory, then start with the specific review skill that matches the task. There is no single default orchestrator for ordinary reviews. If your assistant does not auto-route installed skills, explicitly reference the relevant `<skill>/SKILL.md` file as a fallback.
 
 ---
 
@@ -28,11 +29,6 @@ A modular suite of **five interconnected AI coding skills** that provide systema
 - [How the Skills Connect](#how-the-skills-connect)
 - [Step-by-Step Usage](#step-by-step-usage)
 - [Installation Guide](#installation-guide)
-  - [Codex](#codex)
-  - [Claude Code](#claude-code)
-  - [GitHub Copilot](#github-copilot)
-  - [Kilo Code](#kilo-code)
-  - [OpenCode](#opencode)
 - [Directory Structure](#directory-structure)
 - [Contributing](#contributing)
 
@@ -463,18 +459,23 @@ The four review skills are designed to be **complementary, not overlapping**. Ea
 
 ## Step-by-Step Usage
 
-> **Important Context Note:** How these skills activate depends entirely on your AI agent. In **Agentic Frameworks** (like specific Codex or Kilo configurations), simply asking a "trigger phrase" may automatically route the request. In **Standard LLM Assistants** (like Claude Code or GitHub Copilot), you must explicitly reference the relevant `SKILL.md` file as context first.
+> **Activation note:** Start with the review skill that matches the job, such as `bug-review`, `code-review`, `quality-review`, or `security-review`. Use `gatekeeper-code` when you need to validate review reports. In assistants that do not auto-route installed skills, reference the relevant `<skill>/SKILL.md` file explicitly as a fallback.
 
 ### Running a Single Review Skill
 
-1. **Open your AI coding agent** (Codex, Claude Code, Copilot, Kilo Code, or OpenCode).
-2. **Provide context (if required by your agent):** Explicitly attach or reference the relevant `SKILL.md` file (e.g., `@workspace`, or dragging the file into chat).
-3. **Ask for a specific review type** using natural language:
+1. **Install the inner skill folders** in your configured skills directory.
+2. **Open your AI coding agent** (Codex, Claude Code, Copilot, Kilo Code, or OpenCode).
+3. **Start with the review skill that matches the task**:
+   - `"Run bug-review on this codebase"` → activates **bug-review**
+   - `"Review this PR with code-review"` → activates **code-review**
+   - `"Use quality-review to assess maintainability"` → activates **quality-review**
+   - `"Use security-review to check this service for vulnerabilities"` → activates **security-review**
+4. **If your assistant needs manual context, fall back to the skill file directly**:
    - `"Find bugs in this code using the bug-review/SKILL.md instructions"` → activates **bug-review**
    - `"Review this PR for merge readiness using the code-review/SKILL.md instructions"` → activates **code-review**
    - `"Check code quality using quality-review/SKILL.md"` → activates **quality-review**
    - `"Review this code for security vulnerabilities using security-review/SKILL.md"` → activates **security-review**
-4. **Receive the structured report** with findings, severity, evidence, and recommendations.
+5. **Receive the structured report** with findings, severity, evidence, and recommendations.
 
 ### Running a Full Review Pipeline (Agentic Frameworks Only)
 
@@ -508,40 +509,46 @@ If you already have review results and want to validate them:
 
 ## Installation Guide
 
-Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory (detailed checklists). To "install" them, you simply place them in your project so your AI context can read them. **Different agents respond to custom skills differently.**
+Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory (detailed checklists). To install them, copy the **inner skill folders** from `Code-Check_SkillSet/` into the skills directory your agent is configured to read.
 
-### Prerequisites
+This README assumes you are working from the combined AI SkillSets repository. If you are using a separately published mirror of this SkillSet, the same install rule applies; only the surrounding repo path changes.
 
-```bash
-git clone https://github.com/TykoDev/Code-Check_SkillSet.git
-```
+### Canonical Install Rule
 
-Or download the repository as a ZIP and extract it.
+Copy these folders, not the top-level `Code-Check_SkillSet/` directory:
+
+- `bug-review/`
+- `code-review/`
+- `quality-review/`
+- `security-review/`
+- `gatekeeper-code/`
+
+Use `.agents/skills/` when your environment supports a shared skills directory, or the configured equivalent for your assistant.
 
 ---
 
-### Standard AI Assistants (Claude Code & GitHub Copilot)
+### Standard Assistants (Claude Code and GitHub Copilot)
 
-These tools do **not** natively auto-route to isolated skill files unless you establish the context. You must copy the folders into an accessible location and add them to the tool's system instructions.
+These assistants do **not** always auto-route to installed skill files. Keep the same copied skill folders in an accessible location, then point the assistant at the right review skill or fallback `SKILL.md` file.
 
 #### Claude Code
-Claude Code does not use a native `.claude/skills/` directory. Instead, you integrate them via `CLAUDE.md`.
+Claude Code does not use a guaranteed native skills directory, so the important part is keeping the copied folders somewhere your project instructions can reference consistently.
 
-1. Copy the skill directories into your workspace (e.g., into `.claude/skills/` for organization, or just `skills/`).
+1. Copy the installed Code-Check skill folders into a location your workspace can reference, such as `.agents/skills/` or `.claude/skills/`.
 2. Add a reference in your **`CLAUDE.md`** (project root):
    ```markdown
    ## Code Review Skills
-   This project uses the Code-Check SkillSet. Before reviewing code, please read the relevant SKILL.md file in `.claude/skills/[skill-name]/SKILL.md` and meticulously follow its instructions.
+   This project uses the Code-Check SkillSet. Start with the review skill that matches the task. If Claude does not auto-route the installed skill, read `.agents/skills/[skill-name]/SKILL.md` first.
    ```
 
 #### GitHub Copilot
-GitHub Copilot does not natively parse a custom `.github/skills/` directory to trigger agents. 
+GitHub Copilot does not guarantee automatic routing from a custom skills folder.
 
-1. Copy the skill directories into your workspace (e.g., `.github/skills/`).
+1. Copy the installed Code-Check skill folders into a location your repository instructions can reference.
 2. Reference them in **`.github/copilot-instructions.md`**:
    ```markdown
    ## Custom Code Review
-   When asked to perform a deep code review, always read the instructions inside `.github/skills/[skill-name]/SKILL.md` first. Use `@workspace` to ensure Copilot can see the skill files in context.
+   When asked to review code, start with the matching review skill. If Copilot does not auto-route the installed skill, use `@workspace` and follow `.agents/skills/[skill-name]/SKILL.md`.
    ```
 
 ---
@@ -550,9 +557,11 @@ GitHub Copilot does not natively parse a custom `.github/skills/` directory to t
 
 If you are using a dedicated agentic runner that natively recognizes a `skills` directory structure:
 
-1. Create the environment's skills directory `mkdir -p .agents/skills` (or `.codex/skills`, `.kilo/skills`, `.opencode/skills` respectively).
-2. Copy the individual skill folders (`bug-review`, `code-review`, etc.) directly into that directory.
-3. The framework should automatically parse the `.md` metadata and route requests based on configured prompt triggers.
+1. Create the environment's skills directory, typically `.agents/skills/` or the framework-specific equivalent.
+2. Copy the individual skill folders (`bug-review`, `code-review`, and the rest) directly into that directory.
+3. Prompt the review skill that matches the task.
+4. Use `gatekeeper-code` only when you want report validation.
+5. If the framework does not auto-route as expected, fall back to `<skill>/SKILL.md`.
 
 ---
 
@@ -579,6 +588,7 @@ If the agent responds with a structured report following the skill's output form
 ```
 Code-Check_SkillSet/
 ├── README.md                          # This file
+├── QUICK-START.md                     # Brief onboarding guide
 ├── bug-review/
 │   ├── SKILL.md                       # Bug Finding Specialist instructions
 │   └── references/
@@ -622,7 +632,7 @@ Contributions are welcome! If you'd like to improve the skills, add new referenc
 3. Make your changes
 4. Submit a pull request
 
-For questions or suggestions, open an issue on the [GitHub repository](https://github.com/TykoDev/Code-Check_SkillSet).
+For questions or suggestions, open an issue or discussion in the repository where you found this SkillSet.
 
 ---
 

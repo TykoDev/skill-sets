@@ -7,10 +7,11 @@
 # Build-Team SkillSet
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
-> **Repository:** [`TykoDev/Build-Team_SkillSet`](https://github.com/TykoDev/Build-Team_SkillSet)
 > **License:** See repository for license details
 
-A modular suite of **six specialized AI skills** that orchestrate a fully autonomous code implementation pipeline — from approved design specifications to production-ready, security-audited, completeness-verified code. Designed to plug into any AI coding agent that supports skill/tool folders — including **Codex**, **Claude Code**, **GitHub Copilot**, **Kilo Code**, and **OpenCode**.
+A modular suite of **six specialized AI skills** that orchestrate a fully autonomous code implementation pipeline — from approved design specifications to production-ready, security-audited, completeness-verified code. This README assumes the combined **AI SkillSets** repository is your primary install path, while still staying usable if this SkillSet is published as a separate mirror.
+
+The canonical install rule is the same in both cases: copy the **inner skill folders** into your agent's skills directory, then start with the `build-management` entry point. If your assistant does not auto-route installed skills, explicitly reference the relevant `<skill>/SKILL.md` file as a fallback.
 
 ---
 
@@ -29,11 +30,6 @@ A modular suite of **six specialized AI skills** that orchestrate a fully autono
 - [How the Skills Connect](#how-the-skills-connect)
 - [Step-by-Step Usage](#step-by-step-usage)
 - [Installation Guide](#installation-guide)
-  - [Codex](#codex)
-  - [Claude Code](#claude-code)
-  - [GitHub Copilot](#github-copilot)
-  - [Kilo Code](#kilo-code)
-  - [OpenCode](#opencode)
 - [Directory Structure](#directory-structure)
 - [Contributing](#contributing)
 
@@ -388,24 +384,25 @@ The six skills are designed to be **complementary, not overlapping**. Each owns 
 
 ## Step-by-Step Usage
 
-> **Important Context Note:** How these skills activate depends entirely on your AI agent. In **Agentic Frameworks** (like specific Codex or Kilo configurations), you prompt the entrypoint. In **Standard LLM Assistants** (like Claude Code or GitHub Copilot), you must explicitly reference the relevant `SKILL.md` file as context first.
+> **Activation note:** The canonical entry point is `build-management`. In agentic frameworks that auto-route installed skills, prompt that entry point directly. In assistants that do not auto-route skills, reference `build-management/SKILL.md` or another specific skill file explicitly as a fallback.
 
 ### Running the Full Autonomous Pipeline (Agentic Frameworks)
 
-1. **Open your AI coding agent** (Codex, Kilo Code, or OpenCode).
-2. **Provide the design specification** (a design package from Dev-Design SkillSet, an SRS, or an implementation plan).
-3. **Request the build-management to start:**
+1. **Install the inner skill folders** in your configured skills directory.
+2. **Open your AI coding agent** (Codex, Kilo Code, or OpenCode).
+3. **Provide the design specification** (a design package from Dev-Design SkillSet, an SRS, or an implementation plan).
+4. **Request the `build-management` entry point:**
    ```
    "Use the build-management skill to implement this design specification"
    ```
-4. The `build-management` orchestrates all phases autonomously.
-5. The `gatekeeper-build` validates every phase output behind the scenes.
-6. The `cross-check-build-confirm` performs final completeness verification.
-7. You receive a fully implemented, tested, security-audited, and completeness-verified build package.
+5. The `build-management` skill orchestrates all phases autonomously.
+6. The `gatekeeper-build` skill validates every phase output behind the scenes.
+7. The `cross-check-build-confirm` skill performs final completeness verification.
+8. You receive a fully implemented, tested, security-audited, and completeness-verified build package.
 
 ### Running a Single Skill
 
-You can bypass `build-management` and target a specific skill directly:
+You can bypass `build-management` and target a specific skill directly when you only need one part of the pipeline:
 
 1. **Provide context (if required by your agent):** Explicitly attach or reference the relevant `SKILL.md` file (e.g., `@workspace`, or dragging the file into chat).
 2. **Ask for a specific task** using natural language:
@@ -431,40 +428,47 @@ You can bypass `build-management` and target a specific skill directly:
 
 ## Installation Guide
 
-Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory (detailed checklists and patterns). To "install" them, you simply place them in your project so your AI context can read them. **Different agents respond to custom skills differently.**
+Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory (detailed checklists and patterns). To install them, copy the **inner skill folders** from `Build-Team_SkillSet/` into the skills directory your agent is configured to read.
 
-### Prerequisites
+This README assumes you are working from the combined AI SkillSets repository. If you are using a separately published mirror of this SkillSet, the same install rule applies; only the surrounding repo path changes.
 
-```bash
-git clone https://github.com/TykoDev/Build-Team_SkillSet.git
-```
+### Canonical Install Rule
 
-Or download the repository as a ZIP and extract it.
+Copy these folders, not the top-level `Build-Team_SkillSet/` directory:
+
+- `build-management/`
+- `bob-the-builder/`
+- `test-builder/`
+- `security-builder/`
+- `gatekeeper-build/`
+- `cross-check-build-confirm/`
+
+Use `.agents/skills/` when your environment supports a shared skills directory, or the configured equivalent for your assistant.
 
 ---
 
-### Standard AI Assistants (Claude Code & GitHub Copilot)
+### Standard Assistants (Claude Code and GitHub Copilot)
 
-These tools do **not** natively auto-route to isolated skill files unless you establish the context. You must copy the folders into an accessible location and add them to the tool's system instructions.
+These assistants do **not** always auto-route to installed skill files. Keep the same copied skill folders in an accessible location, then point the assistant at the right entry point or fallback `SKILL.md` file.
 
 #### Claude Code
-Claude Code does not use a native `.claude/skills/` directory. Instead, you integrate them via `CLAUDE.md`.
+Claude Code does not use a guaranteed native skills directory, so the important part is keeping the copied folders somewhere your project instructions can reference consistently.
 
-1. Copy the skill directories into your workspace (e.g., into `.claude/skills/` for organization, or just `skills/`).
+1. Copy the installed Build-Team skill folders into a location your workspace can reference, such as `.agents/skills/` or `.claude/skills/`.
 2. Add a reference in your **`CLAUDE.md`** (project root):
    ```markdown
    ## Build Team Skills
-   This project uses the Build-Team SkillSet. To build implementations from design specs, always read `.claude/skills/build-management/SKILL.md` first. For isolated tasks, read the respective `.claude/skills/[skill]/SKILL.md`.
+   This project uses the Build-Team SkillSet. Start implementation work with the build-management entry point. If Claude does not auto-route the installed skill, read `.agents/skills/build-management/SKILL.md` first.
    ```
 
 #### GitHub Copilot
-GitHub Copilot does not natively parse a custom `.github/skills/` directory to trigger agents.
+GitHub Copilot does not guarantee automatic routing from a custom skills folder.
 
-1. Copy the skill directories into your workspace (e.g., `.github/skills/`).
+1. Copy the installed Build-Team skill folders into a location your repository instructions can reference.
 2. Reference them in **`.github/copilot-instructions.md`**:
    ```markdown
    ## Build Implementation
-   When asked to implement designs or build features, use `@workspace` and follow `.github/skills/build-management/SKILL.md` to orchestrate the build pipeline.
+   When asked to implement designs or build features, start with build-management. If Copilot does not auto-route the installed skill, use `@workspace` and follow `.agents/skills/build-management/SKILL.md`.
    ```
 
 ---
@@ -473,9 +477,10 @@ GitHub Copilot does not natively parse a custom `.github/skills/` directory to t
 
 If you are using a dedicated agentic runner that natively recognizes a `skills` directory structure:
 
-1. Create the environment's skills directory `mkdir -p .agents/skills` (or `.codex/skills`, `.kilo/skills`, `.opencode/skills` respectively).
-2. Copy the individual skill folders (`build-management`, `bob-the-builder`, etc.) directly into that directory.
-3. The framework should automatically parse the `.md` metadata and route requests based on configured prompt triggers.
+1. Create the environment's skills directory, typically `.agents/skills/` or the framework-specific equivalent.
+2. Copy the individual skill folders (`build-management`, `bob-the-builder`, and the rest) directly into that directory.
+3. Prompt the `build-management` entry point directly.
+4. If the framework does not auto-route as expected, fall back to `build-management/SKILL.md`.
 
 ---
 
@@ -549,7 +554,7 @@ Contributions are welcome! If you'd like to improve the skills, add new referenc
 3. Make your changes
 4. Submit a pull request
 
-For questions or suggestions, open an issue on the [GitHub repository](https://github.com/TykoDev/Build-Team_SkillSet).
+For questions or suggestions, open an issue or discussion in the repository where you found this SkillSet.
 
 ---
 
