@@ -16,25 +16,29 @@
 
 > **Author:** [TykoDev](https://github.com/TykoDev)
 
-I’ve been experimenting with orchestrating AI skills into practical **SkillSets** for three parts of software work:
+This repo is easiest to use as a practical three-step workflow across software delivery:
 
-- planning and design
-- building and implementation
-- code review
+- use `commander` to design and plan the work
+- use `build-management` to implement the approved plan
+- use `code-chief` to review the resulting codebase, PR, or release candidate when that review orchestrator is available in your agent setup
 
-This setup has worked well for me so far. I’m sure it’s not perfect, but I wanted something that felt straightforward and actually usable without pulling in a bunch of extra framework ideas I didn’t need.
+Use `commander` when you have an idea, feature request, or rough scope and need a structured output such as requirements, architecture, milestones, and an implementation-ready plan.
 
-I also didn’t find much out there that matched this style without a lot of added overhead. Tools like larger "do everything" stacks can be interesting, but I wanted something simpler: pick one of three groups, drop the skills in, and start using them. No extra "agree to send data" steps, no platform lock-in, and no hidden magic.
+Use `build-management` after the plan is approved. It is the main implementation entry point and is designed to coordinate coding, tests, security checks, and completeness validation without you manually driving each build skill.
 
-If you try it and have feedback, I’d genuinely love to hear it.
+Use `code-chief` when you want a full review pipeline over completed work and that orchestrator is installed in your agent environment. It is the clearest entry point for "review everything" requests, while the individual Code-Check skills still work well for targeted checks such as bug-only, quality-only, or security-only review.
 
-**What you get:**
+**Typical prompts:**
 
-- **Dev-Design_SkillSet** for turning rough ideas into a structured plan
-- **Build-Team_SkillSet** for delegating implementation work
-- **Code-Check_SkillSet** for targeted code review and validation
-- Plain Markdown skill files that are easy to inspect yourself
-- Extensive docs and stack-aware planning guidance
+- `"Use commander to design and plan a multi-tenant booking platform for small clinics."`
+- `"Use build-management to implement this approved design specification."`
+- `"Use code-chief to do a full code review of this branch before merge."`
+- `"Use build-management to implement this plan and include a code-chief review before delivery."`
+- `"Use commander to plan this feature, then use build-management to build it, then use code-chief to review the result."`
+
+Use the plain skill name in prompts by default. Some agent environments also expose installed skills as slash commands such as `/commander`, `/build-management`, and `/code-chief`.
+
+This gives you a simple default path: plan first, build second, review third. If `code-chief` is not installed in your setup, use the direct Code-Check review skills instead.
 
 ---
 
@@ -59,7 +63,7 @@ The repo is split into **three separate SkillSet groups**. You can install one, 
 
 - **Dev-Design_SkillSet** — planning, requirements, architecture, and implementation design
 - **Build-Team_SkillSet** — implementation, testing, security checks, and build validation
-- **Code-Check_SkillSet** — bug finding, code review, quality review, and security review
+- **Code-Check_SkillSet** — orchestrated code review pipeline: bug finding, code review, quality review, security review, adversarial penetration testing, and frontend audit
 
 The goal is to keep setup simple: copy the skills you want into your agent’s skills folder and use them directly.
 
@@ -108,25 +112,29 @@ Choose the group that matches what you need right now:
 
 Copy the inner skill folders into your agent’s skills directory, usually `.agents/skills/`.
 
+For Dev-Design installs, also copy the sibling `tech-stacks/` folder when you want the overlay templates available.
+
 ### 3. Start with the right entry point
 
 Use one of these:
 
-- **Dev-Design_SkillSet:** talk to `/commander`
-- **Build-Team_SkillSet:** talk to `/build-management`
-- **Code-Check_SkillSet:** talk directly to the review skill you want, such as `bug-review`, `quality-review`, or `security-review`
+- **Dev-Design_SkillSet:** start with `commander`
+- **Build-Team_SkillSet:** start with `build-management`
+- **Code-Check_SkillSet:** start with `code-chief` for full pipeline reviews, or use individual skills like `bug-review` or `security-review` for targeted reviews
 
 ### Example prompts
 
 ```text
-Use /commander to turn this product idea into a build-ready plan.
+Use commander to turn this product idea into a build-ready plan.
 
-Use /build-management to implement this approved plan.
+Use build-management to implement this approved plan.
 
-Run bug-review and security-review on this codebase.
+Use code-chief to do a full code review of this codebase.
 ```
 
 That’s the whole idea: pick the group, install the skills, and use the entry point that fits the job.
+
+Some assistants expose the same entry points as slash commands such as `/commander`; if yours does, the same guidance still applies.
 
 If your assistant does **not** auto-route skills, use the same entry point concept but reference the relevant `<skill>/SKILL.md` file explicitly as a fallback.
 
@@ -136,7 +144,7 @@ If your assistant does **not** auto-route skills, use the same entry point conce
 
 ### Dev-Design_SkillSet
 
-Start with **`/commander`** and give it your idea, context, constraints, and goals. It will coordinate the planning and design flow for you and produce a structured plan.
+Start with **`commander`** and give it your idea, context, constraints, and goals. It will coordinate the planning and design flow for you and produce a structured plan.
 
 Best for:
 
@@ -147,7 +155,7 @@ Best for:
 
 ### Build-Team_SkillSet
 
-Hand your approved plan to **`/build-management`** and let it manage implementation. This SkillSet is designed to take the design output and push it through coding, testing, security review, and completeness checks.
+Hand your approved plan to **`build-management`** and let it manage implementation. This SkillSet is designed to take the design output and push it through coding, testing, security review, and completeness checks.
 
 Best for:
 
@@ -158,16 +166,14 @@ Best for:
 
 ### Code-Check_SkillSet
 
-This group intentionally does **not** have a single organizer skill. Instead, you talk directly to the review skill that matches what you need.
+Start with **`code-chief`** and it will orchestrate all six specialist review skills, submit reports to the adversarial meta-reviewer, and deliver a consolidated validated package. Individual skills can also be invoked directly for targeted reviews.
 
-Examples:
+Best for:
 
-- `bug-review`
-- `code-review`
-- `quality-review`
-- `security-review`
-
-That gives you more flexibility when you only want one kind of review instead of a full pipeline.
+- full-pipeline code review
+- targeted bug, quality, or security review
+- adversarial penetration testing
+- frontend performance and accessibility audits
 
 ### Shared Traits
 
@@ -227,8 +233,9 @@ The three SkillSets form a sequential pipeline. Each produces a structured outpu
  │   │                                          │                           │
  │   │  "Is it actually good?"                  │                           │
  │   │                                          │                           │
- │   │  bug-review + code-review +              │                           │
- │   │  quality-review + security-review        │                           │
+ │   │  code-chief → bug-review → code-review → │                           │
+ │   │  quality-review → security-review →      │                           │
+ │   │  mr-robot → frontier                     │                           │
  │   │  (gatekeeper-code validates all)         │                           │
  │   │                                          │                           │
  │   │  Output: Validated Review Reports        │                           │
@@ -340,39 +347,46 @@ Final Build Package
 
 > *Adversarial, multi-dimensional code review*
 
-The **Code-Check SkillSet** provides systematic, evidence-based code review through 4 specialized review skills and 1 adversarial meta-reviewer. Unlike the other two SkillSets, it uses a **hub-and-spoke** architecture — review skills operate independently and the Gatekeeper validates all reports before they reach the user.
+The **Code-Check SkillSet** provides systematic, evidence-based code review through 6 specialist review skills, 1 pipeline orchestrator, and 1 adversarial meta-reviewer (8 skills total). It uses an **orchestrator-driven pipeline** architecture — `code-chief` delegates to each specialist in sequence, consolidates their reports, and submits the package to `gatekeeper-code` for adversarial validation before delivery.
 
-### Skills (5)
+### Skills (8)
 
 | Skill | Role | Key Standards |
 |---|---|---|
+| **code-chief** | Pipeline orchestrator — delegates phases, manages gatekeeper cycles, delivers final package | State machine protocol |
 | **bug-review** | Correctness defects — crashes, data corruption, logic errors, resource leaks | CWE Top 25, IEEE 1044, IBM ODC |
 | **code-review** | Holistic merge-readiness across 8 review dimensions | Google's code review framework |
 | **quality-review** | Long-term code health — maintainability, architecture, efficiency, tech debt | Clean Code, C4, DORA, IEEE 730 |
 | **security-review** | Exploitability and compliance — vulnerability detection and threat modeling | NIST SSDF, OWASP ASVS, STRIDE |
+| **mr-robot** | Adversarial penetration testing — offensive exploit chain construction | OWASP Testing Guide, PTES, CVSS 4.0 |
+| **frontier** | Frontend analytics and UI/UX audit — performance, accessibility, frontend security | Core Web Vitals, WCAG 2.2, CSP |
 | **gatekeeper-code** | Adversarial meta-reviewer — challenges every finding for accuracy before delivery | 5-type challenge protocol |
 
-### Architecture (Hub-and-Spoke)
+### Architecture (Orchestrator-Driven Pipeline)
 
 ```
-User Request → [bug-review, code-review, quality-review, security-review]
-                    │            │              │              │
-                    └────────────┴──────┬───────┴──────────────┘
-                                        ▼
-                                 gatekeeper-code
-                                        │
-                                        ▼
-                               Validated Reports → User
+User Request → code-chief → [bug-review → code-review → quality-review →
+               security-review → mr-robot → frontier*] → gatekeeper-code
+                                                                │
+                                                       ┌────────┼────────┐
+                                                       ▼                 ▼
+                                               Validated Package   Not Ready
+                                                   → User         (revision loop
+                                                                   via code-chief)
+
+* frontier skipped for backend-only projects
 ```
 
 ### Trigger Phrases
 
 ```
+"Run code-chief on this codebase"
+"Do a full code review of this project"
 "Find bugs in this code"
 "Review this PR for merge readiness"
-"Check code quality and standards"
+"Run mr-robot to penetration test this API"
+"Run frontier to audit the frontend"
 "Review for security vulnerabilities"
-"Validate these review findings"
 ```
 
 > **Full documentation:** [`Code-Check_SkillSet/README.md`](Code-Check_SkillSet/README.md) | **Quick start:** [`Code-Check_SkillSet/QUICK-START.md`](Code-Check_SkillSet/QUICK-START.md)
@@ -387,19 +401,19 @@ For a complete idea-to-reviewed-code pipeline, invoke the SkillSets in sequence:
 
 1. **Design Phase** — Start with `commander` from Dev-Design SkillSet:
    ```
-   "Use the commander skill to design a new REST API for a booking system"
+   "Use commander to design a new REST API for a booking system"
    ```
    Output: Approved design package with SRS, architecture, API contracts, and implementation plan.
 
 2. **Build Phase** — Feed the design into `build-management` from Build-Team SkillSet:
    ```
-   "Use the build-management skill to implement the approved design specification"
+   "Use build-management to implement the approved design specification"
    ```
    Output: Production code, test suite, security audit, and completeness verification.
 
 3. **Review Phase** — Run the build output through Code-Check SkillSet:
    ```
-   "Do a full code review using all Code-Check skills"
+   "Use code-chief to run a full code review of this project"
    ```
    Output: Adversarially-validated review reports with merge recommendation.
 
@@ -412,9 +426,12 @@ Each SkillSet works independently. Common standalone scenarios:
 | Design a new feature from scratch | Dev-Design | `commander` |
 | Implement an existing design or plan | Build-Team | `build-management` |
 | Write code for a specific module | Build-Team | `bob-the-builder` (direct) |
+| Full pipeline code review | Code-Check | `code-chief` |
 | Review existing code for bugs | Code-Check | `bug-review` |
 | Full PR review before merge | Code-Check | `code-review` |
 | Security audit of a codebase | Code-Check or Build-Team | `security-review` or `security-builder` |
+| Adversarial penetration testing | Code-Check | `mr-robot` |
+| Frontend performance/accessibility audit | Code-Check | `frontier` |
 
 ### Using Individual Skills
 
@@ -433,9 +450,12 @@ That manual `SKILL.md` pattern is a fallback for assistants that do not auto-rou
 ```
 /
 ├── README.md                              # This file — root guidance
-├── Code-Check_SkillSet/                   # Code review (5 skills)
+├── Code-Check_SkillSet/                   # Code review (8 skills)
 │   ├── README.md
 │   ├── QUICK-START.md
+│   ├── code-chief/                        # Pipeline orchestrator
+│   │   ├── SKILL.md
+│   │   └── references/                    # workflow-protocol, handoff-templates
 │   ├── bug-review/                        # Correctness defect detection
 │   │   ├── SKILL.md
 │   │   └── references/                    # checklist, detection-techniques, triage-workflow
@@ -448,6 +468,12 @@ That manual `SKILL.md` pattern is a fallback for assistants that do not auto-rou
 │   ├── security-review/                   # Vulnerability detection and compliance
 │   │   ├── SKILL.md
 │   │   └── references/                    # frameworks, secure-coding-checklist, supply-chain
+│   ├── mr-robot/                          # Adversarial penetration testing
+│   │   ├── SKILL.md
+│   │   └── references/                    # attack-methodology, exploit-patterns, severity-scoring
+│   ├── frontier/                          # Frontend analytics and UI/UX audit
+│   │   ├── SKILL.md
+│   │   └── references/                    # performance-checklist, accessibility-checklist, frontend-security
 │   └── gatekeeper-code/                   # Adversarial report validator
 │       ├── SKILL.md
 │       └── references/                    # challenge-protocol, delegation-workflow, cross-validation
@@ -469,7 +495,14 @@ That manual `SKILL.md` pattern is a fallback for assistants that do not auto-rou
 │   │   └── references/                    # arc42-template, architecture-patterns
 │   ├── designer/                          # UI/UX and frontend strategy
 │   │   ├── SKILL.md
-│   │   └── references/                    # frontend-patterns, design-system-template
+│   │   └── references/
+│   │       ├── design-system-template.md
+│   │       ├── frontend-patterns.md
+│   │       ├── layout-patterns.md
+│   │       ├── styling-decision-matrix.md
+│   │       ├── ui-ux-standards.md
+│   │       ├── visual-design-guide.md
+│   │       └── page-templates/            # 19 page-template resources (1 selection guide + 18 concrete templates)
 │   ├── engineer/                          # Implementation and DevOps specification
 │   │   ├── SKILL.md
 │   │   └── references/                    # implementation-patterns, devops-patterns

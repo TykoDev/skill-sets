@@ -117,6 +117,45 @@
 
 ---
 
+### Phase 4: cross-check-build-confirm Output (Completeness Scan)
+
+#### Static Scan Completeness Checklist
+
+| # | Check | Pass Criteria |
+|---|-------|--------------|
+| 1 | All 7 scan steps executed | Scan report includes results for all categories: Static Pattern, Structural, Behavioral, Data, Configuration, Documentation, Runtime Startup |
+| 2 | Scan scope covers full codebase | Total files scanned is reasonable for project size; no directories excluded without justification |
+| 3 | Design spec referenced | Scan references the original design specification for structural and feature completeness |
+| 4 | Severity classifications correct | BLOCKERs are genuinely production-breaking; WARNINGs are genuinely ambiguous |
+| 5 | Feature completeness matrix present | All features from design spec listed with implementation status |
+
+#### Runtime Startup Verification Checklist
+
+| # | Check | Pass Criteria |
+|---|-------|--------------|
+| 1 | Project type correctly identified | Classification matches actual project structure and dependencies |
+| 2 | Start commands correctly identified | Commands match project's package.json scripts, Makefile targets, or framework conventions |
+| 3 | Backend startup tested (if applicable) | Startup log provided showing successful boot; health check response documented |
+| 4 | Frontend startup tested (if applicable) | Dev server startup confirmed; content served and verified |
+| 5 | Simultaneous operation tested (if full-stack) | Both servers confirmed running concurrently without conflict |
+| 6 | Startup stability verified | Servers remained running for at least 10 seconds without crash |
+| 7 | Process cleanup confirmed | All started processes properly terminated after verification |
+| 8 | Exemption justified (if no server) | Clear documentation of why runtime verification does not apply, with alternative verification |
+| 9 | Failure logs captured (if failures) | Full startup error output included for any BLOCKER findings |
+| 10 | Findings correctly classified | Runtime failures classified as BLOCKER (not WARNING or INFO) |
+
+#### Verdict Validation Checklist
+
+| # | Check | Pass Criteria |
+|---|-------|--------------|
+| 1 | CLEAN verdict justified | Zero BLOCKERs, zero WARNINGs across ALL 7 steps including runtime |
+| 2 | FINDINGS verdict complete | All findings packaged with correct severity, file location, and required action |
+| 3 | Runtime verification not skipped | Step 7 results present in the scan report, or exemption documented |
+| 4 | Remediation loop tracked | If re-scan, previous findings verified as resolved |
+| 5 | Escalation criteria met (if applicable) | If 2 cycles completed with persistent BLOCKERs, escalation report provided |
+
+---
+
 ## Cross-Phase Consistency Matrix
 
 After reviewing individual phases, verify consistency across all approved deliverables:
@@ -124,11 +163,11 @@ After reviewing individual phases, verify consistency across all approved delive
 ```markdown
 ## Cross-Phase Consistency Check
 
-| Code Module | Implementation (Phase 1) | Tests (Phase 2) | Security (Phase 3) | Status |
-|------------|------------------------|-----------------|-------------------|--------|
-| user/auth | Implemented ✓ | Tests cover login, registration ✓ | Auth audit passed ✓ | Consistent |
-| order/payment | Implemented ✓ | Tests cover CRUD but not payment edge cases | No specific payment security review | GAP |
-| config | Implemented ✓ | No tests | No security review of config loading | GAP |
+| Code Module | Implementation (Phase 1) | Tests (Phase 2) | Security (Phase 3) | Completeness (Phase 4) | Status |
+|------------|------------------------|-----------------|-------------------|----------------------|--------|
+| user/auth | Implemented ✓ | Tests cover login, registration ✓ | Auth audit passed ✓ | Complete, server starts ✓ | Consistent |
+| order/payment | Implemented ✓ | Tests cover CRUD but not payment edge cases | No specific payment security review | Complete ✓ | GAP (tests + security) |
+| config | Implemented ✓ | No tests | No security review of config loading | Env vars documented ✓ | GAP (tests + security) |
 ```
 
 ### Consistency Checks
@@ -140,6 +179,9 @@ After reviewing individual phases, verify consistency across all approved delive
 | Tests ↔ Security | Security findings have corresponding test coverage |
 | Code ↔ Spec | Implementation matches design specification |
 | Security fixes ↔ Code | All remediation items are reflected in the final code |
+| Code ↔ Runtime | All server components identified in code have corresponding startup verification |
+| Spec ↔ Runtime | Design spec's deployment architecture matches tested server components |
+| Runtime ↔ Config | Environment variables needed for startup are all documented in .env.example |
 
 ### Gap Resolution
 

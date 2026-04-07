@@ -1,15 +1,14 @@
 ---
 name: Security Review Specialist
-description: >
+description: >-
   This skill should be used when the user asks to "review security",
   "check for vulnerabilities", "do a security audit", "review for OWASP
-  issues", "check authentication code", "review access control",
-  "assess supply chain security", "check for secrets in code",
-  "review cryptography usage", "evaluate threat model alignment",
-  "check for injection vulnerabilities", "review for prompt injection",
+  issues", "check authentication code", "assess supply chain security",
+  "review cryptography usage", "check for injection vulnerabilities",
   "assess AI security", or "check compliance with NIST SSDF". It performs
-  thorough, systematic security analysis using NIST SSDF, OWASP ASVS,
-  CWE Top 25, and threat modeling integration with risk-tiered review depth.
+  systematic security analysis using NIST SSDF, OWASP ASVS, CWE Top 25,
+  and threat modeling with risk-tiered review depth.
+version: 1.0.0
 ---
 
 # Security Review Specialist
@@ -83,7 +82,20 @@ Apply a risk-tiered approach to determine review depth.
 - Run SCA with reachability analysis (is the vulnerable code actually called?)
 - Check transitive dependency chains for known vulnerabilities
 - Validate dependency provenance and integrity (SLSA alignment, signatures)
+- Check for malicious package indicators: typosquatting, dependency confusion, post-install scripts with network calls, recent maintainer ownership transfers (454,600+ malicious npm packages detected in 2025)
+- Perform reachability analysis: are the vulnerable code paths in dependencies actually called by the application? Reachability-aware SCA (Semgrep Supply Chain, Snyk Reachability) reduces false positives by up to 98%
 - Consult `references/supply-chain.md` for detailed supply chain gate procedures
+
+**Step 7: API Security Assessment (API-Heavy Codebases).** For applications with significant API surface areas, cross-reference findings against the OWASP API Security Top 10 (2023):
+- **API1: BOLA** — Broken Object Level Authorization (most prevalent API vulnerability)
+- **API2: Broken Authentication** — Weak token handling, missing rate limiting
+- **API3: BOPLA** — Broken Object Property Level Authorization (mass assignment, excessive data exposure)
+- **API4: Unrestricted Resource Consumption** — Missing rate limits, pagination abuse
+- **API5: BFLA** — Broken Function Level Authorization (admin endpoints exposed)
+- **API7: SSRF** — Server-Side Request Forgery via URL parameters
+- **API8: Security Misconfiguration** — CORS, headers, error verbosity
+- **API9: Improper Inventory Management** — Undocumented or deprecated endpoints
+- **API10: Unsafe Consumption of APIs** — Trusting third-party API responses without validation
 
 ## Secure Coding Checklist Summary
 
@@ -139,9 +151,46 @@ Structure the security review report as follows:
 - [Which checklist categories were applied, which were not applicable]
 ```
 
-## Handoff to Gatekeeper
+Append the following structured summary block at the end of every report for
+pipeline consumption:
 
-After completing the security review report, submit it to the `gatekeeper-code` skill for adversarial validation. If no `gatekeeper-code` skill is available, self-validate by confirming each finding has a verifiable code path, correct CWE mapping, and justified CVSS score. The gatekeeper-code applies especially rigorous scrutiny to security findings: Are CWE mappings accurate? Are CVSS scores justified by the actual exploit scenario? Were all relevant OWASP categories checked? Were AI-specific threats considered for code touching AI components? Were supply chain implications evaluated for dependency changes? For High-risk tier reviews, load the full checklist from `references/secure-coding-checklist.md`. For Low-risk tier reviews, the summary in this file is sufficient.
+```
+---
+## Pipeline Summary (Machine-Readable)
+
+phase_id: 4
+skill: security-review
+status: COMPLETE
+risk_assessment: [High / Medium / Low]
+finding_count:
+  critical: [n]
+  high: [n]
+  medium: [n]
+  low: [n]
+checklist_coverage: [percentage]
+verdict: [High Risk / Medium Risk / Low Risk / Clean]
+supply_chain_status: [Clean / Issues Found]
+threat_model_delta: [Updated / Not Applicable / No Changes]
+key_concerns: [top 3 findings by severity, one line each]
+cross_references: [file:line pairs flagged for cross-skill attention]
+---
+```
+
+## Pipeline Integration
+
+**When invoked by code-chief (pipeline mode):**
+- Receive delegation with review target scope, Phase 1–3 context, and technology stack
+- Execute the full security review workflow (risk assessment, automated gates, checklist, threat model, AI threats, supply chain)
+- Submit the completed report to code-chief (not directly to gatekeeper-code)
+- Include the structured pipeline summary block at the end of the report
+- Code-chief owns the gatekeeper-code validation cycle in pipeline mode
+
+**When invoked standalone:**
+- Execute the full security review workflow independently
+- Submit the completed report to `gatekeeper-code` for adversarial validation
+- If no `gatekeeper-code` skill is available, self-validate by confirming each finding has a verifiable code path, correct CWE mapping, and justified CVSS score
+
+In both modes, the gatekeeper-code applies especially rigorous scrutiny to security findings: Are CWE mappings accurate? Are CVSS scores justified by the actual exploit scenario? Were all relevant OWASP categories checked? Were AI-specific threats considered for code touching AI components? Were supply chain implications evaluated for dependency changes? For High-risk tier reviews, load the full checklist from `references/secure-coding-checklist.md`. For Low-risk tier reviews, the summary in this file is sufficient.
 
 ## Additional Resources
 

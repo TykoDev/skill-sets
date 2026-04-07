@@ -5,6 +5,10 @@
 ```markdown
 ## COMMANDER DELEGATION: Phase 1 — Requirements & Domain Analysis
 
+### Execution Mode
+Pipeline mode delegated by commander. Do NOT submit to `gatekeeper-design`
+yourself. Return deliverables plus a review packet to commander.
+
 ### Original User Request
 [Paste user's project description verbatim]
 
@@ -13,7 +17,7 @@
 - **Team size**: [Specified or "Not specified"]
 - **Budget**: [Specified or "Not specified"]
 - **Regulatory**: [Specified or "None identified"]
-- **Technical constraints**: [Specified or "None identified"]
+- **Technical constraints/preferences**: [Specified or "None identified"]
 - **Existing systems**: [Specified or "Greenfield project"]
 
 ### Scope Classification
@@ -23,11 +27,15 @@
 [Any additional context, clarifications from user intake, or assumptions made]
 
 ### Expected Deliverables
-1. Software Requirements Specification (SRS) following references/requirements-template.md
+1. Software Requirements Specification (SRS) following `references/requirements-template.md`
 2. Domain Analysis with bounded contexts and domain model
 
-### Gatekeeper-Design Submission Required
-Submit completed deliverables to gatekeeper-design for review before returning to commander.
+### Return Contract
+Return the completed deliverables plus a review packet containing:
+- Source skill: `researcher`
+- Deliverables list
+- Hard user technology constraints/preferences captured in the SRS
+- Open questions and assumptions
 ```
 
 ---
@@ -36,6 +44,10 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 
 ```markdown
 ## COMMANDER DELEGATION: Phase 2 — Project Planning & Delivery Strategy
+
+### Execution Mode
+Pipeline mode delegated by commander. Do NOT submit to `gatekeeper-design`
+yourself. Return deliverables plus a review packet to commander.
 
 ### Original User Request
 [Paste user's project description verbatim]
@@ -49,6 +61,7 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 - MUST-priority items: [count]
 - Key NFRs: [list critical ones]
 - Bounded contexts: [count]
+- User technology constraints/preferences: [summary]
 
 ### Commander Notes
 [Any timeline pressure, phasing preferences, or risk areas to prioritize]
@@ -57,10 +70,14 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 1. Project Plan with phase breakdown and milestones
 2. Risk register with mitigations
 3. Rollout strategy with feature flag lifecycle
-4. Technology decision timeline
+4. Technology decision timeline and rollout prerequisites
 
-### Gatekeeper-Design Submission Required
-Submit completed deliverables to gatekeeper-design for review before returning to commander.
+### Return Contract
+Return the completed deliverable plus a review packet containing:
+- Source skill: `planner`
+- Deliverables list
+- Explicit technology constraints/preferences carried forward
+- Technology decision gates and rollout prerequisites
 ```
 
 ---
@@ -69,6 +86,10 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 
 ```markdown
 ## COMMANDER DELEGATION: Phase 3 — System Architecture
+
+### Execution Mode
+Pipeline mode delegated by commander. Do NOT submit to `gatekeeper-design`
+yourself. Return deliverables plus a review packet to commander.
 
 ### Original User Request
 [Paste user's project description verbatim]
@@ -84,22 +105,33 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 - Scale requirements: [from NFRs]
 - Integration points: [from SRS external interfaces]
 - Team constraints: [from planner]
+- User technology constraints/preferences: [summary]
 
-### Tech Stack Preference
-[If user specified a preference, note it here. Otherwise: "No preference — recommend based on requirements"]
-
-### Available Tech Stack Templates
-Backend: tech-stacks/{node-typescript, bun-typescript, deno-typescript, python-fastapi, rust-axum, go-gin, dotnet-aspnet}.md
-Frontend: tech-stacks/{react-nextjs, react-tanstack, vue-nuxt, angular, astro, vite-spa, svelte-sveltekit}.md
+### Backend Overlay Library
+Select exactly one backend/runtime overlay from the sibling skills-root
+`tech-stacks/` folder. The architect should load the matching overlay file from
+its own skill context.
+- `node-typescript.md`
+- `bun-typescript.md`
+- `deno-typescript.md`
+- `python-fastapi.md`
+- `rust-axum.md`
+- `go-gin.md`
+- `dotnet-aspnet.md`
 
 ### Expected Deliverables
 1. Arc42 Architecture Document with C4 diagrams (Mermaid)
 2. Architecture Decision Records (ADRs) for significant decisions
 3. API Contracts (OpenAPI/AsyncAPI specifications)
 4. Data Model (ERD with entity definitions)
+5. Backend Stack Lock with exact overlay file, version tuple, and justified deviations
 
-### Gatekeeper-Design Submission Required
-Submit completed deliverables to gatekeeper-design for review before returning to commander.
+### Return Contract
+Return the completed deliverables plus a review packet containing:
+- Source skill: `architect`
+- Deliverables list
+- Backend Stack Lock summary
+- Exceptions or ADR-backed deviations
 ```
 
 ---
@@ -109,6 +141,10 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 ```markdown
 ## COMMANDER DELEGATION: Phase 4 — Frontend Architecture & UI/UX
 
+### Execution Mode
+Pipeline mode delegated by commander. Do NOT submit to `gatekeeper-design`
+yourself. Return deliverables plus a review packet to commander.
+
 ### Original User Request
 [Paste user's project description verbatim]
 
@@ -116,6 +152,7 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 - ✅ SRS (from researcher)
 - ✅ Architecture Document (from architect)
 - ✅ API Contracts (from architect)
+- ✅ Backend Stack Lock (from architect)
 
 ### Frontend Requirements
 - SEO requirements: [Critical / Not important]
@@ -124,20 +161,39 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 - Performance targets: [from SRS NFRs]
 - Framework preference: [if user specified]
 
+### Frontend Overlay Library
+Select exactly one frontend overlay from the sibling skills-root `tech-stacks/`
+folder. The designer should load the matching overlay file from its own skill
+context.
+- `react-nextjs.md`
+- `react-tanstack.md`
+- `vue-nuxt.md`
+- `angular.md`
+- `astro.md`
+- `vite-spa.md`
+- `svelte-sveltekit.md`
+
 ### Architecture Context
 - Rendering approach recommended by architect: [SSR/SPA/SSG/Islands]
 - Backend API protocol: [REST/GraphQL/tRPC/gRPC]
 - Auth flow: [from architecture document]
+- Backend Stack Lock: [exact overlay file and version tuple]
 
 ### Expected Deliverables
 1. Frontend Architecture Specification
-2. Component hierarchy and design system spec
-3. State management strategy
-4. Accessibility requirements
-5. Performance targets
+2. Frontend Stack Lock with exact overlay file, version tuple, and justified deviations
+3. Component hierarchy and design system spec
+4. State management strategy
+5. Accessibility requirements
+6. Performance targets
 
-### Gatekeeper-Design Submission Required
-Submit completed deliverables to gatekeeper-design for review before returning to commander.
+### Return Contract
+Return the completed deliverable plus a review packet containing:
+- Source skill: `designer`
+- Deliverables list
+- Frontend Stack Lock summary
+- Alignment notes for backend stack lock and API contracts
+- Exceptions or justified deviations
 ```
 
 ---
@@ -146,6 +202,10 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 
 ```markdown
 ## COMMANDER DELEGATION: Phase 5 — Implementation Specification
+
+### Execution Mode
+Pipeline mode delegated by commander. Do NOT submit to `gatekeeper-design`
+yourself. Return deliverables plus a review packet to commander.
 
 ### Original User Request
 [Paste user's project description verbatim]
@@ -156,31 +216,39 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 - ✅ Architecture Document (from architect)
 - ✅ API Contracts (from architect)
 - ✅ ADRs (from architect)
+- ✅ Backend Stack Lock (from architect)
 - ✅ Frontend Spec (from designer) [if applicable]
+- ✅ Frontend Stack Lock (from designer) [if applicable]
 
 ### Architecture Decisions Summary
 - Architecture style: [from ADR-001]
-- Runtime: [from ADR]
-- Framework: [from ADR]
-- Database: [from ADR]
+- Runtime: [from Backend Stack Lock]
+- Framework: [from stack lock]
+- Database: [from ADR / Backend Stack Lock]
 - ORM: [from ADR]
 
-### Tech Stack Selection
-- Backend: [final stack from architect's ADRs]
-- Frontend: [final stack from designer's spec]
+### Locked Overlays
+- Backend: [exact overlay file from architect]
+- Frontend: [exact overlay file from designer or N/A]
+- Exceptions: [list or "None"]
 
 ### Expected Deliverables
-1. Repository structure (complete directory layout)
-2. Environment variable contract (.env specification)
-3. Testing strategy (tools, levels, coverage targets)
-4. CI/CD pipeline specification
-5. Docker/containerization configuration
-6. Security controls (OWASP mapping)
-7. Observability configuration (OpenTelemetry)
-8. Code quality tooling
+1. Inherited Stack Locks record with exact overlay filenames, version tuples, and deviations
+2. Repository structure (complete directory layout)
+3. Environment variable contract (.env specification)
+4. Testing strategy (tools, levels, coverage targets)
+5. CI/CD pipeline specification
+6. Docker/containerization configuration
+7. Security controls (OWASP mapping)
+8. Observability configuration (OpenTelemetry)
+9. Code quality tooling
 
-### Gatekeeper-Design Submission Required
-Submit completed deliverables to gatekeeper-design for review before returning to commander.
+### Return Contract
+Return the completed deliverable plus a review packet containing:
+- Source skill: `engineer`
+- Deliverables list
+- Inherited Stack Locks summary
+- Any ADR-backed deviations or unresolved exceptions
 ```
 
 ---
@@ -189,6 +257,9 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 
 ```markdown
 ## GATEKEEPER-DESIGN REVIEW REQUEST
+
+### Review Mode
+Pipeline mode — commander-owned review cycle
 
 ### Phase
 [Phase number and name]
@@ -202,10 +273,16 @@ Submit completed deliverables to gatekeeper-design for review before returning t
 ### Upstream Context
 [What approved deliverables informed this work]
 
+### Stack-Lock Registry
+- User technology constraints/preferences: [summary]
+- Backend Stack Lock: [exact overlay file / N/A]
+- Frontend Stack Lock: [exact overlay file / N/A]
+- Exceptions: [None or listed]
+
 ### Review Request
 Execute full adversarial review per gatekeeper-design protocol.
-Validate against review-criteria.md for this deliverable type.
-Cross-check against upstream approved deliverables for consistency.
+Validate against `review-criteria.md` for this deliverable type.
+Cross-check against upstream approved deliverables for consistency and stack-lock lineage.
 ```
 
 ---
@@ -218,7 +295,7 @@ Cross-check against upstream approved deliverables for consistency.
 
 **Prepared by**: Dev Design SkillSet Pipeline
 **Date**: [YYYY-MM-DD]
-**Status**: Complete — All phases gatekeeper-design-approved
+**Status**: Complete — All required phases gatekeeper-design-approved
 
 ---
 
@@ -233,21 +310,20 @@ Cross-check against upstream approved deliverables for consistency.
 | 2 | Domain Analysis | researcher | ✅ APPROVED |
 | 3 | Project Plan | planner | ✅ APPROVED |
 | 4 | Architecture Document (Arc42) | architect | ✅ APPROVED |
-| 5 | API Contracts | architect | ✅ APPROVED |
-| 6 | ADR Collection | architect | ✅ APPROVED |
-| 7 | Frontend Architecture Spec | designer | ✅ APPROVED |
-| 8 | Implementation Specification | engineer | ✅ APPROVED |
+| 5 | Backend Stack Lock | architect | ✅ APPROVED |
+| 6 | API Contracts | architect | ✅ APPROVED |
+| 7 | ADR Collection | architect | ✅ APPROVED |
+| 8 | Frontend Architecture Spec | designer | ✅ APPROVED |
+| 9 | Frontend Stack Lock | designer | ✅ APPROVED |
+| 10 | Implementation Specification | engineer | ✅ APPROVED |
+| 11 | Inherited Stack Locks | engineer | ✅ APPROVED |
 
-## Tech Stack Summary
+## Stack Lock Summary
 
-| Layer | Technology | Rationale |
-|-------|-----------|-----------|
-| Backend Runtime | [e.g., Node.js 22] | [Brief rationale] |
-| Backend Framework | [e.g., Fastify 5] | [Brief rationale] |
-| Frontend Framework | [e.g., Next.js 15] | [Brief rationale] |
-| Database | [e.g., PostgreSQL 16] | [Brief rationale] |
-| ORM | [e.g., Drizzle] | [Brief rationale] |
-| Validation | [e.g., Zod v4] | [Brief rationale] |
+| Layer | Locked Overlay | Version Tuple | Notes |
+|-------|----------------|---------------|-------|
+| Backend | [e.g. `node-typescript.md`] | [e.g. Node.js 22 + Fastify 5 + PostgreSQL 16 + Zod 4] | [Brief rationale / exceptions] |
+| Frontend | [e.g. `react-nextjs.md`] | [e.g. Node.js 22 + Next.js 15 + React 19 + TanStack Query 5] | [Brief rationale / exceptions] |
 
 ## Recommended Next Actions
 

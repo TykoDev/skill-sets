@@ -145,18 +145,103 @@ Verify all specified database entities have corresponding migrations:
 
 ---
 
-## 7. CLEAN Verdict Criteria
+## 7. Runtime Startup Verification Checklist
+
+### Project Classification
+
+| Classification | Criteria | Runtime Steps Required |
+|---|---|---|
+| Backend-only | Server process, API endpoints, no frontend build | Backend startup + health check |
+| Frontend-only | Dev server, static build, no backend API | Frontend startup + content verification |
+| Full-stack | Both backend API and frontend build | Both startups + simultaneous operation |
+| Library / CLI | No server component | Document exemption |
+| Docker-only | All services via docker-compose | Docker compose up + container health |
+
+### Pre-Start Dependency Check
+
+| Check | Method | Failure Severity |
+|---|---|---|
+| Dependencies installed | Verify `node_modules/`, `.venv/`, `vendor/` exist | BLOCKER |
+| Environment configured | Verify `.env` exists or all required vars have defaults | BLOCKER |
+| Build artifacts present | Verify compiled output if required (`dist/`, `build/`) | BLOCKER |
+| External services documented | Check for database/Redis/queue requirements in README or docker-compose | WARNING if undocumented |
+
+### Backend Startup Verification
+
+| # | Check | Pass Criteria |
+|---|---|---|
+| 1 | Process starts without crash | Exit code 0 not emitted within startup window |
+| 2 | No fatal error in stdout/stderr | No stack traces, no "Error:", no "FATAL" in startup logs |
+| 3 | Listens on expected port | Log contains "listening on" or equivalent; port matches config |
+| 4 | Health check responds | HTTP GET to health endpoint returns 2xx within 5 seconds |
+| 5 | Base route responds | HTTP GET to `/` or `/api` returns non-error response |
+| 6 | Stable for 10 seconds | Process remains running without crash for 10 seconds after first response |
+
+### Frontend Startup Verification
+
+| # | Check | Pass Criteria |
+|---|---|---|
+| 1 | Dev server starts without crash | Process does not exit within startup window |
+| 2 | Compilation succeeds | Log contains "compiled successfully" or equivalent; no compilation errors |
+| 3 | Serves content | HTTP GET to dev server URL returns HTML content |
+| 4 | No blank page | Response body contains expected root element (e.g., `<div id="root">` or `<div id="app">`) |
+| 5 | No console errors on load | No JavaScript errors emitted during initial page load |
+| 6 | Stable for 10 seconds | Dev server remains running without crash for 10 seconds |
+
+### Full-Stack Simultaneous Operation
+
+| # | Check | Pass Criteria |
+|---|---|---|
+| 1 | No port conflicts | Backend and frontend bind to different ports successfully |
+| 2 | Both healthy concurrently | Both health checks pass while both servers are running |
+| 3 | Stable concurrently for 10 seconds | Neither process crashes during concurrent operation window |
+| 4 | Frontend can reach backend (if applicable) | If frontend proxies to backend, verify the proxy connection works |
+
+### Process Cleanup
+
+| # | Check | Pass Criteria |
+|---|---|---|
+| 1 | All started processes terminated | Kill signals sent and confirmed |
+| 2 | No orphaned child processes | No lingering node/python/go processes from startup test |
+| 3 | Ports released | Previously bound ports are free after cleanup |
+
+### Common Failure Patterns
+
+| Failure | Root Cause | Remediation Action |
+|---|---|---|
+| `MODULE_NOT_FOUND` | Dependencies not installed | Run package manager install; verify lockfile |
+| `EADDRINUSE` | Port already in use | Configure alternative port; document port requirements |
+| `env var X is required` | Missing environment variable | Add to `.env` and `.env.example` |
+| `Connection refused` to database | External service not running | Add docker-compose for dev dependencies; document requirement |
+| Compilation errors | TypeScript/build errors in source | Fix source code errors (route to bob-the-builder) |
+| `Cannot find module` | Missing build step | Add build step to startup sequence; document in README |
+
+### Exemption Documentation (No-Server Projects)
+
+When a project has no server component:
+
+| Field | Required Content |
+|---|---|
+| Project type | Library, CLI tool, data pipeline, etc. |
+| Why no server | Brief justification |
+| Alternative verification | What was verified instead (e.g., CLI runs `--help` successfully, library exports resolve) |
+| Approved by | gatekeeper-build after reviewing the exemption package |
+
+---
+
+## 8. CLEAN Verdict Criteria
 
 ### Mandatory Requirements (ALL must pass)
 
 | # | Requirement | Measurement |
 |---|------------|-------------|
-| 1 | Zero BLOCKER findings across all 6 scan categories | Automated + manual scan |
+| 1 | Zero BLOCKER findings across all 7 scan categories | Automated + manual scan |
 | 2 | Zero WARNING findings (or all justified) | Each warning individually justified |
 | 3 | Feature completeness: 100% of specified features implemented | Feature matrix shows all Complete or approved Deferred |
 | 4 | API endpoint completeness: 100% implemented | Endpoint matrix shows all Complete |
 | 5 | Configuration completeness: all env vars documented | Env var audit shows no gaps |
 | 6 | No scaffold code in production paths | Static pattern scan clean |
+| 7 | Runtime startup verified | All server components start and respond to health checks, or project documented as exempt |
 
 ### Acceptable Exceptions
 
@@ -169,13 +254,13 @@ Verify all specified database entities have corresponding migrations:
 
 ---
 
-## 8. Re-Scan Protocol
+## 9. Re-Scan Protocol
 
 ### When to Re-Scan
 
 After bob-the-builder addresses findings:
 1. Receive updated codebase from build-management
-2. Execute ALL 6 scan steps (not just the previously failed ones)
+2. Execute ALL 7 scan steps (not just the previously failed ones)
 3. New issues may be introduced during remediation — full scan catches these
 
 ### Re-Scan Differences
@@ -183,7 +268,7 @@ After bob-the-builder addresses findings:
 | Aspect | First Scan | Re-Scan |
 |--------|-----------|---------|
 | Scope | Full codebase | Full codebase (same scope) |
-| Focus | All categories equally | Extra attention to previously found patterns |
+| Focus | All categories equally | Extra attention to previously found patterns; extra attention to runtime startup if previous failures were dependency or configuration related |
 | New findings | Report all | Report all (including new regressions) |
 | Previous findings | Initial detection | Verify resolution — did the fix work? |
 

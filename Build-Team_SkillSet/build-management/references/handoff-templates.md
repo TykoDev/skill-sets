@@ -40,7 +40,8 @@ Use this template when delegating the initial implementation to bob-the-builder.
 ### Instruction
 Execute the bob-the-builder skill workflow. Produce complete, production-ready
 code for all specified modules. Implement in dependency order. No placeholders,
-no TODO stubs, no mock implementations. Submit to build-management when complete.
+no TODO stubs, no mock implementations. Submit to build-management for
+gatekeeper-build review when complete.
 ```
 
 ---
@@ -75,7 +76,7 @@ Use this template after Phase 1 code is gatekeeper-build-approved.
 Execute the test-builder skill workflow. Create a comprehensive test suite
 covering unit, integration, and E2E tests. Prioritize critical paths. Every
 test must be meaningful — no trivial assertions. Submit to build-management
-when complete.
+for gatekeeper-build review when complete.
 ```
 
 ---
@@ -108,7 +109,8 @@ Use this template after Phase 2 tests are gatekeeper-build-approved.
 Execute the security-builder skill workflow. Perform a systematic security
 audit of the entire codebase. Map findings to OWASP Top 10, CWE Top 25,
 and NIST SSDF. Package remediation items separately for routing to
-bob-the-builder. Submit the audit report to build-management when complete.
+bob-the-builder. Submit the audit report and any remediation package to
+build-management for gatekeeper-build review when complete.
 ```
 
 ---
@@ -139,7 +141,10 @@ Use this template after Phase 3 security audit is gatekeeper-build-approved and 
 Execute the cross-check-build-confirm skill workflow. Perform a complete
 scan for scaffold code, TODOs, placeholders, mockups, fake data, and
 temporary implementations. Compare implemented modules against the design
-specification. Issue a CLEAN or FINDINGS verdict. Submit to build-management.
+specification. Issue a CLEAN or FINDINGS verdict. If the verdict is CLEAN,
+submit the report to build-management for final gatekeeper-build review. If the
+verdict is FINDINGS, submit the findings package to build-management for
+remediation routing.
 ```
 
 ---
@@ -151,9 +156,9 @@ Use this template when submitting any phase output to gatekeeper-build.
 ```markdown
 ## GATEKEEPER SUBMISSION
 
-### Phase: [1 — Implementation | 2 — Testing | 3 — Security Audit]
-### Source Skill: [bob-the-builder | test-builder | security-builder]
-### Revision Attempt: [1 | 2 | 3]
+### Phase: [1 — Implementation | 2 — Testing | 3 — Security Audit | 4 — Completeness Scan]
+### Source Skill: [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
+### Revision Attempt / Cycle: [1 | 2 | 3]
 
 ### Deliverable Summary
 [Brief description of what is being submitted for review]
@@ -172,7 +177,8 @@ Use this template when submitting any phase output to gatekeeper-build.
 
 ### Request
 Review this deliverable against the design specification. Validate correctness,
-completeness, code quality, security, and documentation. Issue a verdict:
+completeness, code quality, security, documentation, and runtime verification
+when applicable. Issue a verdict:
 APPROVED, REVISE, or ESCALATE.
 ```
 
@@ -222,13 +228,14 @@ Use this template when delivering the completed build package to the user.
 - Test coverage: [percentage]
 - Security findings: [count] found, [count] resolved, [count] accepted risk
 - Completeness scan: CLEAN
+- Final completeness gate: APPROVED
 - Gatekeeper reviews: [count] phases × [avg attempts] average attempts
 
 ### Package Contents
 1. **Production Code** — [location reference]
 2. **Test Suite** — [location reference]
 3. **Security Audit Report** — [inline or reference]
-4. **Completeness Certification** — CLEAN
+4. **Completeness Certification** — CLEAN + final gatekeeper approval
 5. **Build Audit Trail** — [inline log]
 
 ### Deployment Checklist

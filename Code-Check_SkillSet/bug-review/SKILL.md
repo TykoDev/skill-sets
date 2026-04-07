@@ -8,6 +8,7 @@ description: >
   or "assess error paths". It performs systematic bug detection across code
   changes using CWE-driven checklists, defect classification, and test-driven
   review methodology.
+version: 1.0.0
 ---
 
 # Bug Finding Specialist
@@ -78,9 +79,11 @@ Beyond manual review, recommend specific detection techniques based on the code 
 
 **Fuzzing** — For parsers, protocol handlers, serialization/deserialization, and any input-heavy code, recommend coverage-guided fuzzing via libFuzzer (in-process, evolutionary) or ClusterFuzzLite (CI-integrated, targets PRs before merge). Google's OSS-Fuzz has found over 10,000 vulnerabilities and 36,000 bugs across 1,000+ projects. Recommend fuzzing when the change adds or modifies code that processes external or untrusted input formats.
 
-**Mutation Testing** — To validate test suite strength beyond line coverage, recommend PIT (Java), Stryker (JavaScript/TypeScript/C#), or mutmut (Python). Focus mutation analysis on PR-scoped changes to manage execution cost. The mutation score (killed mutants / total non-equivalent mutants) provides a stronger signal than branch coverage alone. Recommend mutation testing when the change includes complex business logic with new test coverage that needs validation.
+**Mutation Testing** — To validate test suite strength beyond line coverage, recommend PIT (Java), Stryker (JavaScript/TypeScript/C#), or mutmut (Python). Focus mutation analysis on PR-scoped changes to manage execution cost. The mutation score (killed mutants / total non-equivalent mutants) provides a stronger signal than branch coverage alone. Research consistently shows mutation score correlates more strongly with real defect detection than statement or branch coverage. Recommend mutation testing when the change includes complex business logic with new test coverage that needs validation.
 
 **Property-Based Testing** — For algorithmic or mathematical code, recommend Hypothesis (Python) or fast-check (JavaScript). Property-based tests find diverse bugs with few false alarms by exploring input spaces systematically rather than relying on hand-picked examples. Recommend property-based testing when the change involves data transformations, serialization round-trips, or mathematical operations where invariants can be expressed as properties.
+
+**SARIF Output.** When recommending static analysis tools, prefer tools that output SARIF (Static Analysis Results Interchange Format) for standardized finding interchange. SARIF enables automated ingestion by CI/CD pipelines, code-chief cross-skill correlation, and gatekeeper-code validation. Tools supporting SARIF: CodeQL, Semgrep, ESLint (via sarif formatter), SonarQube (via export), Meta Infer (via sarif output).
 
 **Formal Verification** — For cryptographic implementations, consensus protocols, and safety-critical control systems, recommend Dafny (with Z3 SMT solver) or TLA+ (for concurrent/distributed systems). Formal verification provides mathematical proof of correctness — recommend it when the cost of an undetected bug exceeds the cost of verification. See `references/detection-techniques.md` for DafnyPro results and integration guidance.
 
@@ -113,9 +116,43 @@ Structure the bug review report as follows:
 - [Which checklist categories were applied and which were not applicable, with justification]
 ```
 
-## Handoff to Gatekeeper
+Append the following structured summary block at the end of every report for
+pipeline consumption:
 
-After completing the bug review report, submit it to the `gatekeeper-code` skill for adversarial validation. If the `gatekeeper-code` skill is not available, perform a self-review pass applying the existence and proportionality checks described in the gatekeeper-code's challenge protocol. The gatekeeper-code will challenge whether findings are real, whether severities are accurately calibrated, and whether important bug classes were missed given the nature of the code change. Prepare to defend each finding with specific evidence: code paths, reproducible conditions, and concrete expected-vs-actual behavior.
+```
+---
+## Pipeline Summary (Machine-Readable)
+
+phase_id: 1
+skill: bug-review
+status: COMPLETE
+risk_assessment: [High / Medium / Low]
+finding_count:
+  critical: [n]
+  major: [n]
+  minor: [n]
+checklist_coverage: [percentage]
+verdict: [High Risk / Medium Risk / Low Risk / Clean]
+key_concerns: [top 3 findings by severity, one line each]
+cross_references: [file:line pairs flagged for cross-skill attention]
+---
+```
+
+## Pipeline Integration
+
+**When invoked by code-chief (pipeline mode):**
+- Receive delegation with review target scope, technology stack, and risk tier
+- Execute the full defect detection workflow
+- Submit the completed report to code-chief (not directly to gatekeeper-code)
+- Include the structured pipeline summary block at the end of the report
+- Code-chief owns the gatekeeper-code validation cycle in pipeline mode
+
+**When invoked standalone:**
+- Execute the full defect detection workflow independently
+- Submit the completed report to `gatekeeper-code` for adversarial validation
+- If no `gatekeeper-code` skill is available, perform a self-review pass applying the existence and proportionality checks described in the gatekeeper-code's challenge protocol
+
+In both modes, prepare to defend each finding with specific evidence: code paths, reproducible conditions, and concrete expected-vs-actual behavior. The gatekeeper-code will challenge whether findings are real, whether severities are accurately calibrated, and whether important bug classes were missed given the nature of the code change.
 
 ## Additional Resources
 

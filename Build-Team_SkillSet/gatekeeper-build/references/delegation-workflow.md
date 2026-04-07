@@ -9,14 +9,14 @@ When gatekeeper-build identifies an issue that requires the originating skill to
 
 ### Header
 - **From**: gatekeeper-build
-- **To**: [bob-the-builder | test-builder | security-builder]
+- **To**: [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
 - **Challenge ID**: [GK-CH-001]
 - **Challenge Type**: [existence | accuracy | completeness | proportionality | consistency]
 - **Round**: [1 | 2]
 - **Priority**: [Critical | Major | Minor]
 
 ### Context
-- **Phase**: [1 — Implementation | 2 — Testing | 3 — Security Audit]
+- **Phase**: [1 — Implementation | 2 — Testing | 3 — Security Audit | 4 — Completeness Scan]
 - **Finding Reference**: [Original finding ID if challenging an existing finding, or GAP-prefix for missing items]
 - **Deliverable Section**: [Which part of the deliverable is being challenged]
 
@@ -43,7 +43,7 @@ The originating skill responds with one of three resolutions:
 ## DELEGATION RESPONSE
 
 ### Header
-- **From**: [bob-the-builder | test-builder | security-builder]
+- **From**: [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
 - **To**: gatekeeper-build
 - **Challenge ID**: [GK-CH-001] (matching)
 - **Round**: [1 | 2] (matching)
@@ -114,7 +114,7 @@ The originating skill responds with one of three resolutions:
 
 **Rules for disputed findings:**
 - No more than 2 Critical findings may be in Disputed status
-- If more than 2 Critical findings are disputed, the verdict MUST be NOT-READY
+- If more than 2 Critical findings are disputed, the verdict MUST be ESCALATE
 - Disputed findings are fully documented for the user's judgment
 
 ---
@@ -177,7 +177,7 @@ The skill responds to each challenge individually within a single response, noti
 | Round 2 exhausted, still unresolved | Mark as Disputed, include in verdict |
 | Fundamental misalignment with spec | ESCALATE verdict → build-management → user |
 | Skill repeatedly fails same challenge type | ESCALATE → build-management for re-delegation |
-| More than 2 Critical disputed findings | NOT-READY verdict → build-management → user |
+| More than 2 Critical disputed findings | ESCALATE verdict → build-management → user |
 
 ### Escalation Format
 
@@ -227,6 +227,11 @@ Maintain a running ledger of all delegation activity:
 | ID | Type | Target | Question Summary | R1 | R2 | Status |
 |----|------|--------|-----------------|-----|-----|--------|
 | GK-CH-020 | accuracy | security | CWE mapping incorrect | corrected | — | Resolved |
+
+### Phase 4 Reviews
+| ID | Type | Target | Question Summary | R1 | R2 | Status |
+|----|------|--------|-----------------|-----|-----|--------|
+| GK-CH-030 | completeness | cross-check-build-confirm | Runtime evidence missing from CLEAN report | corrected | — | Resolved |
 
 ### Metrics
 - Total challenges issued: [N]

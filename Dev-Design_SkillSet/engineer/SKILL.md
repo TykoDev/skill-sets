@@ -21,20 +21,55 @@ pipeline. It takes all previously approved deliverables (requirements, project
 plan, architecture, frontend spec) and produces the implementation-ready
 specification: repository structure, code patterns, testing strategy, CI/CD
 pipeline, Docker configuration, environment contracts, security controls,
-and observability setup.
+observability setup, and an explicit record of the inherited stack locks it is
+implementing.
 
 ## When to Activate
 
 Activate when commander delegates Phase 5 (Implementation Specification)
-after all prior phases have been approved by gatekeeper-design.
+after all prior phases have been approved by gatekeeper-design, or when a user
+directly requests an implementation specification, repository layout, CI/CD
+plan, or DevOps configuration for an already defined design.
+
+---
+
+## Execution Modes
+
+### Pipeline Mode (Commander-Delegated)
+
+In pipeline mode delegated by commander, do NOT submit to `gatekeeper-design`
+yourself. Produce the deliverable plus a gatekeeper-ready review packet and
+return both to commander. Commander owns the review cycle.
+
+### Standalone Mode (Direct User Activation)
+
+When activated directly by a user, this skill owns the final review loop for
+its own deliverable. Produce the implementation specification, submit it to
+`gatekeeper-design`, address any REVISE findings, and return the approved
+result plus the final review report.
 
 ---
 
 ## Workflow
 
-### Step 1: Define Repository Structure
+### Step 1: Record Inherited Stack Locks
 
-Based on the architecture document and chosen tech stack, produce the
+Start by copying forward the approved stack locks exactly as received:
+- **Backend Stack Lock** from architect
+- **Frontend Stack Lock** from designer (if applicable)
+
+Document an **Inherited Stack Locks** section containing:
+- The exact overlay filenames selected upstream
+- The runtime/framework/database/tooling version tuples being implemented
+- Any approved exceptions already recorded upstream
+
+Do not silently substitute stacks, frameworks, or major tooling. Any deviation
+from the inherited locks MUST reference a new or updated ADR and be called out
+as an exception for gatekeeper review.
+
+### Step 2: Define Repository Structure
+
+Based on the architecture document and inherited stack locks, produce the
 complete repository layout using domain-first organization:
 
 ```
@@ -74,10 +109,10 @@ project-root/
 └── README.md
 ```
 
-Reference the appropriate tech-stack template from `tech-stacks/` for
-stack-specific structure details.
+Reference the inherited overlay files from the sibling skills-root
+`../tech-stacks/` library for stack-specific structure details.
 
-### Step 2: Define Environment Variable Contract
+### Step 3: Define Environment Variable Contract
 
 Produce the complete `.env` specification:
 
@@ -111,7 +146,7 @@ Produce the complete `.env` specification:
 Validate all variables at startup with schema validation (Zod/Pydantic).
 Fail fast on invalid or missing configuration.
 
-### Step 3: Design Testing Strategy
+### Step 4: Design Testing Strategy
 
 Select and specify the testing approach:
 
@@ -124,7 +159,7 @@ Select and specify the testing approach:
 
 Consult `references/implementation-patterns.md` for detailed testing patterns.
 
-### Step 4: Design CI/CD Pipeline
+### Step 5: Design CI/CD Pipeline
 
 Produce the CI/CD pipeline specification:
 
@@ -161,7 +196,7 @@ Produce the CI/CD pipeline specification:
 
 Consult `references/devops-patterns.md` for pipeline templates.
 
-### Step 5: Configure Containerization
+### Step 6: Configure Containerization
 
 Produce Docker and docker-compose configurations:
 
@@ -179,7 +214,7 @@ Produce Docker and docker-compose configurations:
 - Message broker if needed
 - Port mapping and environment variables
 
-### Step 6: Specify Security Controls
+### Step 7: Specify Security Controls
 
 Map OWASP Top 10 2025 mitigations to implementation:
 
@@ -193,7 +228,7 @@ Map OWASP Top 10 2025 mitigations to implementation:
 | A06: Supply Chain | Lockfile pinning; `audit` in CI; SBOM generation; Sigstore signing |
 | A10: Exceptional Conditions | Structured error handling; never fail-open; sanitize error messages |
 
-### Step 7: Configure Observability
+### Step 8: Configure Observability
 
 Specify the OpenTelemetry setup:
 
@@ -228,7 +263,7 @@ Specify the OpenTelemetry setup:
 - Health check failing → Page immediately
 ```
 
-### Step 8: Specify Code Quality Tooling
+### Step 9: Specify Code Quality Tooling
 
 Define the code quality configuration:
 
@@ -240,9 +275,20 @@ Define the code quality configuration:
 | **semantic-release** | Versioning | Automated from commit messages |
 | **Changesets** | Monorepo versioning | @changesets/cli |
 
-### Step 9: Submit to Gatekeeper
+### Step 10: Prepare Review Handoff
 
-Package the complete implementation specification and submit to `gatekeeper-design`.
+Package the complete implementation specification with a review packet containing:
+- Source skill: `engineer`
+- Deliverable produced
+- Approved upstream context used
+- Inherited Stack Locks summary with exact overlay file names and version tuples
+- Any ADR-backed deviations or unresolved exceptions
+
+If operating in pipeline mode, return the deliverable and review packet to
+commander for gatekeeper submission.
+
+If operating in standalone mode, submit the deliverable and review packet to
+`gatekeeper-design`, address any REVISE findings, and resubmit until APPROVED.
 
 ---
 
@@ -251,14 +297,21 @@ Package the complete implementation specification and submit to `gatekeeper-desi
 The engineer produces one consolidated deliverable:
 
 **Implementation Specification** containing:
-1. Repository structure with complete directory layout
-2. Environment variable contract (.env specification)
-3. Testing strategy with tools and coverage targets
-4. CI/CD pipeline specification
-5. Docker/containerization configuration
-6. Security controls (OWASP mapping)
-7. Observability configuration (OpenTelemetry)
-8. Code quality tooling configuration
+1. Inherited Stack Locks with exact overlay filenames, version tuples, and
+   any ADR-backed deviations
+2. Repository structure with complete directory layout
+3. Environment variable contract (.env specification)
+4. Testing strategy with tools and coverage targets
+5. CI/CD pipeline specification
+6. Docker/containerization configuration
+7. Security controls (OWASP mapping)
+8. Observability configuration (OpenTelemetry)
+9. Code quality tooling configuration
+
+In pipeline mode, return the deliverable with a gatekeeper-ready review packet.
+
+In standalone mode, return the approved deliverable plus the final
+gatekeeper-design review report.
 
 ---
 

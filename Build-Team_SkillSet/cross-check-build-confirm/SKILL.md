@@ -7,10 +7,13 @@ description: >-
   "check for fake data", "scan for mockups", "verify no temporary code",
   "ensure nothing was missed", "final completeness check", "confirm
   build is production-ready", "check for stubs", "find leftover
-  scaffolding", or "verify all features are implemented". It is the
-  final quality gate that scans the entire codebase for scaffold code,
-  TODOs, placeholders, mockups, fake data, temporary implementations,
-  and incomplete features — delegating all findings back to
+  scaffolding", "verify all features are implemented", "verify the
+  server starts", "test runtime startup", "check if the app runs",
+  or "verify dev servers work". It is the final specialist completeness gate that
+  scans the entire codebase for scaffold code, TODOs, placeholders,
+  mockups, fake data, temporary implementations, and incomplete
+  features — and verifies that backend and frontend dev servers
+  actually start and respond — delegating all findings back to
   bob-the-builder until the codebase is clean.
 version: 1.0.0
 ---
@@ -19,11 +22,14 @@ version: 1.0.0
 
 ## Purpose
 
-Cross-Check Build Confirm is the final quality gate in the Build Team SkillSet
+Cross-Check Build Confirm is the final specialist completeness scan in the Build Team SkillSet
 pipeline. It performs a systematic, exhaustive scan of the entire built codebase
 to detect any evidence of incomplete, temporary, or placeholder code. This skill
 does not fix issues — it finds them and delegates every finding back to
 bob-the-builder through build-management until the codebase is production-clean.
+It is the final specialist phase before delivery, but it does not approve final
+delivery on its own — a `CLEAN` report must still be validated by
+`gatekeeper-build` through build-management.
 
 Every finding is non-negotiable at the BLOCKER level. Placeholder code does not ship.
 
@@ -129,6 +135,92 @@ Verify documentation is not placeholder:
 | Template text unmodified | Compare against known template phrases | WARNING |
 | Missing API documentation | Endpoints without JSDoc/docstring | INFO |
 
+### Step 7: Runtime Startup Verification
+
+Move beyond static analysis to verify the application actually boots and runs. This step detects the project type, identifies the correct start commands, starts backend and/or frontend dev servers, and verifies they respond to health checks within a stability window.
+
+Consult `references/runtime-verification.md` for detailed procedures, detection matrices, and failure catalogs.
+
+#### 7.1 Project Type Detection
+
+Examine project files to classify the project:
+
+| Detection Signal | Classification |
+|---|---|
+| `package.json` with express/fastify/nest/koa | Backend (Node.js) |
+| `package.json` with react/vue/angular/svelte/vite | Frontend (SPA) |
+| `package.json` with next/nuxt/remix/sveltekit | Full-stack (SSR) |
+| `manage.py` | Backend (Django) |
+| `main.py`/`app.py` with uvicorn/flask | Backend (Python API) |
+| `go.mod` + `main.go` | Backend (Go) |
+| `Cargo.toml` + `src/main.rs` | Backend (Rust) |
+| `pom.xml` or `build.gradle` | Backend (Java) |
+| `docker-compose.yml` with services | Docker-orchestrated |
+| None of the above (library, CLI, data pipeline) | No server — exempt |
+
+#### 7.2 Dependency Pre-Flight
+
+Before starting any server, verify:
+
+| Check | Method | Failure Severity |
+|---|---|---|
+| Dependencies installed | `node_modules/`, `.venv/`, `vendor/` exist | BLOCKER |
+| Environment configured | `.env` exists or required vars have defaults | BLOCKER |
+| Build artifacts present | `dist/`, `build/` exist if required | BLOCKER |
+| External services documented | Database/Redis requirements noted in README or docker-compose | WARNING if undocumented |
+
+#### 7.3 Backend Server Startup
+
+1. Start the backend using the identified command
+2. Monitor stdout/stderr for startup indicator ("listening on port", "ready", "startup complete") or 30-second timeout
+3. Health check: HTTP GET to `/health`, `/api/health`, `/healthz`, or `/` — expect 2xx response
+4. Stability window: server remains running for 10 seconds without crash
+5. Capture and report: startup time, port, health check response status
+
+#### 7.4 Frontend Server Startup
+
+1. Start the frontend dev server
+2. Monitor for compilation success indicator ("compiled successfully", "ready on", "Local: http://localhost:") or 60-second timeout
+3. Content check: HTTP GET to dev server URL — expect HTML response with root element (`<div id="root">`, `<div id="app">`)
+4. Stability window: 10 seconds without crash
+
+#### 7.5 Simultaneous Operation (Full-Stack Only)
+
+1. Start backend first, verify healthy
+2. Start frontend, verify healthy
+3. Confirm no port conflicts
+4. Both remain stable for 10-second concurrent window
+5. Shut down in reverse order
+
+#### 7.6 Process Cleanup
+
+Mandatory after all verification:
+1. SIGTERM all started processes
+2. Wait 5 seconds, then SIGKILL if still running
+3. Verify ports released and no orphaned processes
+
+#### Runtime Finding Severity
+
+| Finding | Severity |
+|---|---|
+| Server crashes on startup | BLOCKER |
+| Health check returns non-2xx | BLOCKER |
+| Missing dependencies prevent startup | BLOCKER |
+| Port conflict with no config option | BLOCKER |
+| Missing required env vars cause crash | BLOCKER |
+| Frontend serves error page instead of content | BLOCKER |
+| No server component (library/CLI) — not tested | INFO (exempt — document justification) |
+| Startup takes > 60 seconds | WARNING |
+| Non-fatal deprecation warnings | INFO |
+
+#### Edge Cases
+
+- **Libraries/CLI tools**: Exempt from server startup. Document exemption with alternative verification (e.g., CLI `--help` runs, library imports resolve).
+- **Libraries/CLI tools**: Exempt from server startup. Document the exemption package with alternative verification (e.g., CLI `--help` runs, library imports resolve) so `gatekeeper-build` can approve it.
+- **External service dependencies**: If no docker-compose provided for databases, report as WARNING. Do not BLOCKER for missing cloud services.
+- **Docker Compose projects**: Use `docker compose up --build --wait`; verify container health.
+- **Monorepos**: Test each service independently.
+
 ---
 
 ## Severity Classification
@@ -179,7 +271,7 @@ Package all findings for routing to bob-the-builder through build-management:
 After bob-the-builder addresses findings:
 
 1. Receive the updated codebase from build-management
-2. Re-run the FULL 6-step scan (not just the previously found items — new issues may have been introduced during fixes)
+2. Re-run the FULL 7-step scan (not just the previously found items — new issues may have been introduced during fixes)
 3. Issue updated verdict
 4. **Maximum 2 full scan cycles** — if BLOCKERs persist after 2 cycles, escalate to user through build-management
 
@@ -196,10 +288,28 @@ A CLEAN verdict requires ALL of the following:
 - **INFOs acceptable**: Informational items may remain with documentation
 - **Structural completeness**: All modules, features, and endpoints from the design specification have corresponding implementations
 - **Configuration completeness**: All required environment variables documented, no hardcoded secrets or URLs
+- **Runtime startup verified**: All server components start and respond to health checks, or project documented as exempt with justification
 
 ### FINDINGS Verdict
 
 Issued when any BLOCKER or WARNING exists. Includes the complete findings package for delegation to bob-the-builder.
+
+---
+
+## Handoff to Gatekeeper
+
+Submit every Phase 4 output through build-management.
+
+- If the verdict is `FINDINGS`, build-management routes the findings package to
+  `bob-the-builder`, then re-runs the full 7-step scan.
+- If the verdict is `CLEAN`, submit the completeness scan report through
+  build-management for mandatory `gatekeeper-build` review.
+
+A `CLEAN` verdict is necessary but not sufficient for delivery. The codebase is
+not accepted until `gatekeeper-build` issues `APPROVED` for Phase 4.
+
+If gatekeeper issues a `REVISE` verdict, address the specific report or runtime
+verification gaps, then resubmit through build-management.
 
 ---
 
@@ -225,7 +335,22 @@ Structure the completeness scan report as follows:
 | Data Completeness | [N] | [N] | [N] |
 | Configuration Completeness | [N] | [N] | [N] |
 | Documentation Completeness | [N] | [N] | [N] |
+| Runtime Startup | [N] | [N] | [N] |
 | **Total** | **[N]** | **[N]** | **[N]** |
+
+### Runtime Startup Results
+
+| Server Type | Start Command | Boot Time | Health Check | Status |
+|-------------|---------------|-----------|--------------|--------|
+| Backend ([framework]) | [command] | [N]s | GET [endpoint] → [status] | PASS / FAIL |
+| Frontend ([framework]) | [command] | [N]s | GET / → [status] (HTML) | PASS / FAIL |
+| Simultaneous | both | stable [N]s | both responsive | PASS / FAIL |
+
+_If no server component:_
+- **Project type**: [Library / CLI tool / data pipeline]
+- **Exemption justification**: [Why runtime verification does not apply]
+- **Alternative verification**: [What was verified instead]
+- **Status**: EXEMPT
 
 ### Feature Completeness Matrix
 | Feature | Specified | Implemented | Status |
@@ -249,4 +374,5 @@ Structure the completeness scan report as follows:
 
 For detailed detection patterns and completeness checklists:
 - **`references/scaffold-detection.md`** — Exhaustive pattern catalog organized by category (comment markers, code patterns, data patterns, structural patterns, configuration patterns) with language-specific regex patterns, false positive guidance, and detection confidence levels
-- **`references/completeness-checklist.md`** — Feature completeness matrix template, module completeness checklist, API endpoint completeness verification, database migration completeness, configuration completeness, documentation completeness, CLEAN verdict criteria, and re-scan protocol procedures
+- **`references/completeness-checklist.md`** — Feature completeness matrix template, module completeness checklist, API endpoint completeness verification, database migration completeness, configuration completeness, documentation completeness, runtime startup verification checklist, CLEAN verdict criteria, and re-scan protocol procedures
+- **`references/runtime-verification.md`** — Detailed runtime startup verification procedures including project type detection matrix, start command identification, startup verification protocol, health check procedures, simultaneous operation testing, process cleanup, common failure patterns and their resolution by language (Node.js, Python, Go, Rust, Docker), and edge case handling for libraries, CLIs, Docker-only projects, and monorepos

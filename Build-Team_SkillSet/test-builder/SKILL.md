@@ -185,8 +185,11 @@ Structure the test suite delivery as follows:
 
 ## Handoff to Gatekeeper
 
-Submit the test suite through build-management for gatekeeper-build review. The
-gatekeeper will validate:
+Submit the test suite through build-management for mandatory
+`gatekeeper-build` review. The test suite is not accepted until the gatekeeper
+issues `APPROVED`.
+
+The gatekeeper will validate:
 - Test meaningfulness (are assertions specific and valuable?)
 - Coverage adequacy (are critical paths tested?)
 - Test quality (naming, organization, independence)

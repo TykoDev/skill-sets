@@ -176,6 +176,17 @@ Consult `references/output-protocol.md` for the complete delivery format specifi
 
 ---
 
+## Handoff to Gatekeeper
+
+Submit every implementation delivery through build-management for mandatory
+`gatekeeper-build` review. The implementation is not accepted until the
+gatekeeper issues `APPROVED`.
+
+If gatekeeper returns `REVISE`, address the findings using the remediation
+protocol, update the manifest, and resubmit through build-management.
+
+---
+
 ## Additional Resources
 
 ### Reference Files

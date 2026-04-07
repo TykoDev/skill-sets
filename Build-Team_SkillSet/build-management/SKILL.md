@@ -23,6 +23,13 @@ specialist build skills in sequence, manages gatekeeper-build approval cycles, a
 delivers a consolidated production-ready code package. The user interacts only with
 build-management — all other skills are invoked autonomously.
 
+The canonical workflow is strict and fail-closed:
+
+`build-management -> bob-the-builder -> gatekeeper-build -> test-builder -> gatekeeper-build -> security-builder -> gatekeeper-build -> cross-check-build-confirm -> gatekeeper-build -> delivery`
+
+No mandatory phase may be skipped in the canonical pipeline, and a phase is not
+accepted until `gatekeeper-build` approves it through build-management.
+
 ## Core Principle
 
 > "Build-management drives implementation proactively. It does not wait for
@@ -77,7 +84,7 @@ questions over multiple rounds.
 ### Instruction
 Execute the bob-the-builder skill workflow. Produce complete, production-ready
 code for all specified modules. No placeholders, no TODO stubs. Submit to
-gatekeeper-build when complete.
+build-management for gatekeeper-build review when complete.
 ```
 
 ### Phase 2: Testing → test-builder
@@ -92,13 +99,19 @@ gatekeeper-build when complete.
 **Delegate to**: `security-builder` skill
 **Input provided**: Approved code + approved tests + original design specification
 **Expected output**: Security audit report with remediation items
-**Gatekeeper cycle**: Submit audit to `gatekeeper-build` → approve/revise; remediation items routed to `bob-the-builder`
+**Gatekeeper cycle**: Submit audit to `gatekeeper-build` → approve/revise; if the
+approved audit contains remediation items, route them to `bob-the-builder`, then
+submit the updated code back to `gatekeeper-build` for remediation re-validation
+before Phase 4 begins
 
 ### Phase 4: Completeness Scan → cross-check-build-confirm
 
 **Delegate to**: `cross-check-build-confirm` skill
 **Input provided**: All approved code, tests, and security-cleared codebase
 **Expected output**: Completeness scan report (CLEAN or FINDINGS)
+**Gatekeeper cycle**: A `CLEAN` report is necessary but not sufficient — submit the
+Phase 4 report to `gatekeeper-build` and require a final `APPROVED` verdict before
+delivery
 **Loop**: If FINDINGS, delegate remediation to `bob-the-builder` → re-scan (max 2 cycles)
 
 ---
@@ -109,13 +122,19 @@ For each phase:
 
 1. Receive the deliverable from the specialist skill
 2. Submit to `gatekeeper-build` for adversarial review
-3. If **APPROVED**: Proceed to next phase
-4. If **REVISE**: Forward gatekeeper-build's findings back to the specialist skill
-   with instructions to address mandatory fixes; resubmit to gatekeeper-build
-5. If **ESCALATE**: Re-evaluate the delegation; clarify scope; re-delegate
-   or consult user if ambiguity cannot be resolved
-6. Maximum revision cycles per phase: **3** (if still failing after 3 revisions,
-   escalate to user with findings)
+3. If **APPROVED** on Phases 1-3 with no queued remediation: Proceed to the next phase
+4. If **APPROVED** on Phase 3 with remediation items: Route the fixes to
+   `bob-the-builder`, then submit the updated code back to `gatekeeper-build`
+   before Phase 4 begins
+5. If **APPROVED** on Phase 4: Proceed to final consolidation and delivery
+6. If **REVISE**: Forward gatekeeper-build's findings back to the originating skill
+   with instructions to address mandatory fixes; resubmit to `gatekeeper-build`
+7. If Phase 4 returns **FINDINGS** before gatekeeper review: Route those findings to
+   `bob-the-builder`, re-run `cross-check-build-confirm`, then submit any resulting
+   `CLEAN` report to `gatekeeper-build`
+8. If **ESCALATE**: Stop the pipeline, surface the blocking issue, and consult the user
+9. Maximum revision cycles per phase: **3** (Phase 4 scan cycles remain capped at **2**;
+   if still failing, escalate to user with findings)
 
 Consult `references/workflow-protocol.md` for detailed state management.
 
@@ -123,7 +142,8 @@ Consult `references/workflow-protocol.md` for detailed state management.
 
 ## Final Consolidation and Delivery
 
-After all phases are gatekeeper-build-approved:
+After all four phases are gatekeeper-build-approved, including the final Phase 4
+approval of the completeness report:
 
 ### Step 1: Compile Build Package
 
@@ -135,8 +155,8 @@ Assemble all approved deliverables into a single consolidated package:
 ## Package Contents
 1. Production Code (all modules, gatekeeper-approved)
 2. Test Suite (unit, integration, E2E — gatekeeper-approved)
-3. Security Audit Report (all findings resolved)
-4. Completeness Certification (CLEAN verdict)
+3. Security Audit Report (gatekeeper-approved; all findings resolved)
+4. Completeness Certification (CLEAN verdict + final gatekeeper approval)
 5. Gatekeeper-Build Review Reports (all approval records)
 
 ## Implementation Summary
@@ -144,6 +164,7 @@ Assemble all approved deliverables into a single consolidated package:
 - Test coverage: [percentage]
 - Security findings resolved: [count]
 - Completeness scan: CLEAN
+- Final Phase 4 gate: APPROVED
 
 ## Next Actions
 [Prioritized list of deployment steps, environment setup, or remaining manual tasks]
@@ -167,20 +188,20 @@ Present the complete build package with:
 
 ---
 
-## Adaptive Behavior
+## Canonical Workflow Guarantees
 
-### Skip Logic
+### Mandatory Phase Enforcement
 
-Build-management may skip phases when scope does not warrant them:
+In the canonical pipeline, all four specialist phases are mandatory:
 
-| Scenario | Phases to Skip |
-|----------|---------------|
-| Tests already exist and are comprehensive | Phase 2 (test-builder) |
-| Security audit already completed externally | Phase 3 (security-builder) |
-| Single file change or hotfix | Phase 2, Phase 3 — run Phase 4 only |
-| Infrastructure/config-only change | Phase 2, simplify Phase 3 |
+- Phase 1: `bob-the-builder`
+- Phase 2: `test-builder`
+- Phase 3: `security-builder`
+- Phase 4: `cross-check-build-confirm`
 
-Document all skip decisions with rationale.
+If a specialist phase, remediation loop, or `gatekeeper-build` review cannot run,
+build-management MUST escalate and stop rather than skipping the phase or
+self-approving the output.
 
 ### Proactive Driving
 

@@ -7,10 +7,11 @@ description: >-
   "approve this phase", "validate build correctness", "review before
   advancing", "quality-gate this output", "challenge the test suite",
   or "validate the security audit". It is the adversarial review agent
-  that validates build outputs from bob-the-builder, test-builder, and
-  security-builder. It produces NO code — it challenges, validates, and
-  either approves or rejects work from other skills. Reports are only
-  forwarded after this skill marks them as validated.
+  that validates build outputs from bob-the-builder, test-builder,
+  security-builder, and cross-check-build-confirm. It produces NO
+  code — it challenges, validates, and either approves or rejects
+  work from other skills. Reports are only forwarded after this
+  skill marks them as validated.
 version: 1.0.0
 ---
 
@@ -19,8 +20,8 @@ version: 1.0.0
 ## Purpose
 
 This skill operates as the adversarial review gate for the Build Team SkillSet
-pipeline. Every deliverable produced by `bob-the-builder`, `test-builder`, or
-`security-builder` MUST pass through gatekeeper-build before being accepted by
+pipeline. Every deliverable produced by `bob-the-builder`, `test-builder`,
+`security-builder`, or `cross-check-build-confirm` MUST pass through gatekeeper-build before being accepted by
 `build-management` for advancement to the next phase. The gatekeeper is explicitly
 incentivized to find real errors, inconsistencies, omissions, and quality failures —
 approval is earned, not given.
@@ -44,8 +45,8 @@ high-quality, production-ready deliverables proceed.
 ### Step 1: Identify Review Target
 
 Confirm the exact deliverable under review:
-- **Source skill**: Which skill produced this (bob-the-builder / test-builder / security-builder)?
-- **Phase**: Which build pipeline phase (1-Implementation / 2-Testing / 3-Security)?
+- **Source skill**: Which skill produced this (bob-the-builder / test-builder / security-builder / cross-check-build-confirm)?
+- **Phase**: Which build pipeline phase (1-Implementation / 2-Testing / 3-Security / 4-Completeness)?
 - **Revision attempt**: Is this the first submission or a remediation resubmission?
 - **Upstream context**: What design specification or implementation plan initiated this work?
 
@@ -57,7 +58,7 @@ not a drifted interpretation.
 
 ### Step 3: Execute Multi-Dimensional Review
 
-Apply the review criteria from `references/review-criteria.md` across all seven
+Apply the review criteria from `references/review-criteria.md` across all eight
 dimensions. For each dimension, actively search for failures.
 
 **Dimensions to validate:**
@@ -71,6 +72,7 @@ dimensions. For each dimension, actively search for failures.
 | 5 | **Documentation** | Is behavior described clearly? Are constraints and trade-offs documented? |
 | 6 | **Completeness** | Are all specified features implemented? Are all code paths handled? |
 | 7 | **Correctness** | Is the logic accurate? No off-by-one errors, no incorrect assumptions, no wrong algorithms? |
+| 8 | **Runtime Verification** | Did the application start successfully? Were health checks performed? Is server startup evidence provided? |
 
 ### Step 4: Score and Classify Findings
 
@@ -135,6 +137,38 @@ Consult `references/challenge-protocol.md` for the complete rubric with examples
 
 ---
 
+## Phase 4 Runtime Verification Gate
+
+When reviewing `cross-check-build-confirm` Phase 4 output, the gatekeeper MUST specifically validate the runtime verification step (Step 7 of the completeness scan).
+
+### Mandatory Runtime Evidence
+
+The completeness scan report MUST include the following. Any missing item is a finding:
+
+| Required Evidence | What to Verify | Missing = |
+|---|---|---|
+| Project type classification | Matches actual project structure (package.json, tech stack) | Critical finding |
+| Start command identification | Correct command for the identified project type | Critical finding |
+| Backend startup log excerpt | Shows successful startup indicator and port binding | Critical finding (if backend exists) |
+| Health check response | HTTP status and response body from health endpoint | Critical finding (if backend exists) |
+| Frontend startup log excerpt | Shows successful compilation and dev server ready | Critical finding (if frontend exists) |
+| Frontend content verification | HTTP response showing HTML content served | Critical finding (if frontend exists) |
+| Simultaneous operation confirmation | Both servers stable concurrently (if full-stack) | Critical finding (if full-stack) |
+| Process cleanup confirmation | All started processes terminated | Major finding |
+| Exemption justification | Why runtime verification was skipped (if skipped) | Critical finding (if no justification) |
+
+### Runtime Skip Prevention
+
+A CLEAN verdict from `cross-check-build-confirm` that does not include runtime verification results (either PASS results or a documented exemption) MUST be challenged by the gatekeeper. Issue a Completeness challenge:
+
+- **Challenge type**: Completeness
+- **Question**: "The completeness scan report does not include runtime startup verification results. Was Step 7 (Runtime Startup Verification) executed? Provide startup logs, health check responses, or a documented exemption with justification."
+- **Resolution requirement**: The cross-check skill must either provide the runtime evidence or document why the project is exempt from runtime verification.
+
+**A CLEAN verdict CANNOT be approved by the gatekeeper without runtime verification evidence or an approved exemption.**
+
+---
+
 ## Verdict Rendering
 
 Based on findings, issue one of three verdicts:
@@ -144,6 +178,7 @@ Based on findings, issue one of three verdicts:
 - Zero Critical findings
 - Zero or few Major findings (all acknowledged with justification)
 - Minor findings documented but not blocking
+- Runtime verification evidence present and valid (or exemption documented and justified)
 - The deliverable proceeds to the next phase
 
 ### REVISE
@@ -171,7 +206,7 @@ to the originating skill through build-management.
 ```
 DELEGATION REQUEST
 Source:          gatekeeper-build
-Target Skill:    [bob-the-builder | test-builder | security-builder]
+Target Skill:    [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
 Finding ID:      [ID from review, or GAP- prefix for missing items]
 Challenge Type:  [existence | accuracy | completeness | proportionality | consistency]
 Specific Question: [Precise, answerable question the skill must address]
@@ -185,6 +220,7 @@ The originating skill responds with:
 
 ```
 DELEGATION RESPONSE
+Source Skill:    [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
 Finding ID:      [matching ID]
 Resolution:      [corrected | defended | withdrawn]
 Evidence:        [Specific evidence addressing the challenge]
@@ -226,8 +262,8 @@ Structure the gatekeeper validation report as follows:
 
 ### Metadata
 - **Deliverable**: [description]
-- **Source skill**: [bob-the-builder | test-builder | security-builder]
-- **Phase**: [1 | 2 | 3]
+- **Source skill**: [bob-the-builder | test-builder | security-builder | cross-check-build-confirm]
+- **Phase**: [1 | 2 | 3 | 4]
 - **Revision attempt**: [1 | 2 | 3]
 - **Verdict**: [APPROVED | REVISE | ESCALATE]
 
@@ -243,7 +279,7 @@ Structure the gatekeeper validation report as follows:
 
 ### Critical Findings
 #### GK-C1: [Title]
-- **Dimension**: [spec alignment | code quality | security | testing | documentation | completeness | correctness]
+- **Dimension**: [spec alignment | code quality | security | testing | documentation | completeness | correctness | runtime verification]
 - **Location**: [file:line or section reference]
 - **Issue**: [What is wrong]
 - **Evidence**: [Why this is wrong — specific code reference]
@@ -271,6 +307,6 @@ Structure the gatekeeper validation report as follows:
 ### Reference Files
 
 For detailed review criteria, challenge rubrics, and delegation procedures:
-- **`references/challenge-protocol.md`** — Complete adversarial challenge rubric with detailed definitions, trigger conditions, example challenges, expected response formats, and resolution criteria for each of the 5 challenge categories across all 7 review dimensions
-- **`references/review-criteria.md`** — Per-phase review checklists for bob-the-builder output (code correctness, spec alignment, pattern adherence), test-builder output (test meaningfulness, coverage, assertion quality), and security-builder output (finding accuracy, CWE mapping, remediation actionability), plus cross-phase consistency matrix
+- **`references/challenge-protocol.md`** — Complete adversarial challenge rubric with detailed definitions, trigger conditions, example challenges, expected response formats, and resolution criteria for each of the 5 challenge categories across all 8 review dimensions
+- **`references/review-criteria.md`** — Per-phase review checklists for bob-the-builder output (code correctness, spec alignment, pattern adherence), test-builder output (test meaningfulness, coverage, assertion quality), security-builder output (finding accuracy, CWE mapping, remediation actionability), and cross-check-build-confirm output (completeness scan and runtime verification), plus cross-phase consistency matrix
 - **`references/delegation-workflow.md`** — Detailed delegation request and response formats with worked examples, batch delegation strategies, escalation procedures, resolution tracking, and round limit enforcement

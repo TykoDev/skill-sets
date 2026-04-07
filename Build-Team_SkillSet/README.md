@@ -53,58 +53,48 @@ The **Build-Team SkillSet** transforms an AI coding agent into a complete softwa
 
 ## Architecture
 
-The SkillSet follows an **orchestrator-led pipeline** where `build-management` drives transitions through four core phases, and `gatekeeper-build` guards every handoff:
+The SkillSet follows a **strict orchestrator-led pipeline** where `build-management`
+drives transitions through four mandatory specialist phases, and
+`gatekeeper-build` guards every handoff:
 
 ```
-                    ┌─────────────────────────┐
-                    │  APPROVED DESIGN PACKAGE │
-                    │  (from Dev-Design or     │
-                    │   user's impl. plan)     │
-                    └────────────┬────────────┘
-                                 │
-                                 ▼
-                    ┌─────────────────────────┐
-             ┌─────│    BUILD-MANAGEMENT      │◄────────────┐
-             │     │    (Orchestrator)         │             │
-             │     └────────────┬────────────┘             │
-             │                  │                           │
-             │    ┌─────────────▼──────────────┐            │
-             │    │      BOB-THE-BUILDER       │◄───┐       │
-             │    │   (Production Code)        │    │       │
-             │    └─────────────┬──────────────┘    │       │
-             │                  │                   │       │
-             │    ┌─────────────▼──────────────┐    │       │
-             │    │     GATEKEEPER-BUILD       │────┘       │
-             │    │   (Adversarial Gate)       │  REVISE    │
-             │    └─────────────┬──────────────┘            │
-             │                  │ APPROVED                  │
-             │    ┌─────────────▼──────────────┐            │
-             │    │       TEST-BUILDER         │            │
-             │    │   (Test Suite Creation)    │            │
-             │    └─────────────┬──────────────┘            │
-             │                  │                           │
-             │    ┌─────────────▼──────────────┐            │
-             │    │     GATEKEEPER-BUILD       │            │
-             │    └─────────────┬──────────────┘            │
-             │                  │ APPROVED                  │
-             │    ┌─────────────▼──────────────┐            │
-             │    │     SECURITY-BUILDER       │            │
-             │    │   (Security Audit)         │──remediate─┘
-             │    └─────────────┬──────────────┘
-             │                  │
-             │    ┌─────────────▼──────────────┐
-             │    │     GATEKEEPER-BUILD       │
-             │    └─────────────┬──────────────┘
-             │                  │ APPROVED
-             │    ┌─────────────▼──────────────┐
-             │    │ CROSS-CHECK-BUILD-CONFIRM  │──findings──► bob-the-builder
-             │    │   (Completeness Scan)      │             (loop until clean)
-             │    └─────────────┬──────────────┘
-             │                  │ CLEAN
-             │    ┌─────────────▼──────────────┐
-             └───►│    FINAL BUILD PACKAGE     │
-                  │    → Delivered to User     │
-                  └───────────────────────────┘
+APPROVED DESIGN PACKAGE
+        │
+        ▼
+BUILD-MANAGEMENT
+        │
+        ▼
+BOB-THE-BUILDER
+        │
+        ▼
+GATEKEEPER-BUILD
+        │ APPROVED
+        ▼
+TEST-BUILDER
+        │
+        ▼
+GATEKEEPER-BUILD
+        │ APPROVED
+        ▼
+SECURITY-BUILDER
+        │
+        ▼
+GATEKEEPER-BUILD
+        │ APPROVED
+        ▼
+CROSS-CHECK-BUILD-CONFIRM
+        │ CLEAN
+        ▼
+GATEKEEPER-BUILD
+        │ APPROVED
+        ▼
+FINAL BUILD PACKAGE
+
+Security remediation loop:
+security-builder findings -> bob-the-builder -> gatekeeper-build re-validation
+
+Completeness remediation loop:
+cross-check-build-confirm findings -> bob-the-builder -> cross-check-build-confirm -> gatekeeper-build
 ```
 
 ### Data Flow
@@ -117,8 +107,10 @@ The SkillSet follows an **orchestrator-led pipeline** where `build-management` d
 6. `gatekeeper-build` validates test quality and coverage.
 7. If approved, `build-management` delegates to `security-builder` for Phase 3 security audit.
 8. `gatekeeper-build` validates the audit's accuracy and completeness.
-9. `cross-check-build-confirm` performs a final completeness scan, delegating findings back to `bob-the-builder` until the codebase is clean.
-10. `build-management` consolidates all approved deliverables into a final build package and delivers to the user.
+9. If security remediation is required, `bob-the-builder` applies the fixes and the updated code returns to `gatekeeper-build` for re-validation before the pipeline advances.
+10. `cross-check-build-confirm` performs the 7-step completeness scan, delegating findings back to `bob-the-builder` until the codebase is clean.
+11. A `CLEAN` completeness report is submitted to `gatekeeper-build` for final Phase 4 approval.
+12. `build-management` consolidates all approved deliverables into a final build package and delivers to the user.
 
 ### State Machine
 
@@ -147,6 +139,9 @@ INTAKE → PHASE_1_BUILD → PHASE_1_GATE →
 | **Methodology** | Phased delegation protocol, autonomous state transitions, gatekeeper-gated handoffs |
 
 The **Build Management** skill is the central orchestrator and single entry point for the Build-Team SkillSet. It receives design packages or implementation plans, creates a phased execution plan, delegates to each specialist skill in sequence, manages gatekeeper review cycles, and delivers the final consolidated build package. It drives work proactively — advancing autonomously and only returning to the user when blocked by unresolvable ambiguity.
+
+In the canonical workflow it is fail-closed: all four specialist phases are
+mandatory, and no output is accepted until `gatekeeper-build` approves it.
 
 #### Reference Files
 
@@ -217,6 +212,10 @@ Every test must have at least one specific assertion (not just "does not throw")
 
 The **Security Builder** skill audits the actual implemented code — not designs or plans — for vulnerabilities, misconfigurations, and security anti-patterns. It performs risk assessment, sweeps all OWASP Top 10 categories, traces every external input from entry to sink, audits authentication and authorization, scans dependencies against vulnerability databases, and detects hardcoded secrets. Findings are packaged as structured remediation items for `bob-the-builder`.
 
+Security Builder does not approve delivery on its own. Its audit report and any
+follow-up remediation must be validated by `gatekeeper-build` through
+`build-management` before the pipeline may advance.
+
 #### Severity Classification
 
 Findings use CVSS v4.0 scoring with four severity tiers: Critical (CVSS 9.0-10.0), High (CVSS 7.0-8.9), Medium (CVSS 4.0-6.9), and Low (CVSS 0.1-3.9). Each finding includes CWE mapping, exploit scenario, and a specific remediation action.
@@ -238,9 +237,9 @@ Findings use CVSS v4.0 scoring with four severity tiers: Critical (CVSS 9.0-10.0
 | **Skill name** | `Adversarial Implementation Validator` |
 | **Directory** | `gatekeeper-build/` |
 | **Focus** | Meta-review — validates the quality of other skills' deliverables |
-| **Methodology** | 5-type challenge protocol, 7-dimension review, delegation workflow, adversarial scoring |
+| **Methodology** | 5-type challenge protocol, 8-dimension review, delegation workflow, adversarial scoring |
 
-The **Gatekeeper Build** is fundamentally different from the other five skills. It **produces no code, no tests, and no designs**. Instead, it receives completed deliverables from the build skills and **challenges every claim** to ensure accuracy, completeness, and correctness before the pipeline advances. It reviews across 7 dimensions: spec alignment, code quality, security, testing, documentation, completeness, and correctness.
+The **Gatekeeper Build** is fundamentally different from the other five skills. It **produces no code, no tests, and no designs**. Instead, it receives completed deliverables from the build skills and **challenges every claim** to ensure accuracy, completeness, and correctness before the pipeline advances. It reviews across 8 dimensions: spec alignment, code quality, security, testing, documentation, completeness, correctness, and runtime verification.
 
 #### The 5 Challenge Types
 
@@ -268,8 +267,8 @@ When the Gatekeeper finds an issue, it sends a structured delegation request bac
 
 | File | Contents |
 |---|---|
-| `references/challenge-protocol.md` | Complete challenge rubric: 5 categories x 7 dimensions with examples and resolution criteria |
-| `references/review-criteria.md` | Per-phase review checklists for code, tests, and security audit deliverables |
+| `references/challenge-protocol.md` | Complete challenge rubric: 5 categories x 8 dimensions with examples and resolution criteria |
+| `references/review-criteria.md` | Per-phase review checklists for code, tests, security audit, and completeness scan deliverables |
 | `references/delegation-workflow.md` | Delegation formats, batch strategies, round management, escalation procedures |
 
 ---
@@ -283,9 +282,9 @@ When the Gatekeeper finds an issue, it sends a structured delegation request bac
 | **Focus** | Final completeness verification — no scaffold, no placeholders, no unfinished code |
 | **Methodology** | Static pattern scanning, structural analysis, behavioral verification, exhaustive completeness checklist |
 
-The **Cross-Check Build Confirm** skill is the final quality gate before delivery. It performs an exhaustive six-step scan of the entire codebase to verify that no placeholder code, TODO markers, mock implementations, fake data, debug statements, or incomplete logic survived the build process. Every finding is non-negotiable — findings are delegated to `bob-the-builder` for remediation, and the scan repeats until the codebase achieves a CLEAN verdict.
+The **Cross-Check Build Confirm** skill is the final specialist scan before delivery. It performs an exhaustive 7-step scan of the entire codebase to verify that no placeholder code, TODO markers, mock implementations, fake data, debug statements, incomplete logic, or runtime startup failures survived the build process. Every finding is non-negotiable — findings are delegated to `bob-the-builder` for remediation, and the scan repeats until the codebase achieves a CLEAN verdict that can be submitted to `gatekeeper-build`.
 
-#### Scan Methodology (6 Steps)
+#### Scan Methodology (7 Steps)
 
 1. **Static pattern scan** — TODO, FIXME, HACK, XXX, PLACEHOLDER, MOCK, STUB, TEMP, DUMMY, FAKE, SAMPLE
 2. **Structural completeness** — Verify all modules from the design spec have corresponding implementations
@@ -293,10 +292,11 @@ The **Cross-Check Build Confirm** skill is the final quality gate before deliver
 4. **Data completeness** — Find lorem ipsum, example.com, test@test.com, fake addresses
 5. **Configuration completeness** — Audit default configs, missing .env.example entries, hardcoded URLs
 6. **Documentation completeness** — Detect INSERT HERE, blank sections, template text
+7. **Runtime startup verification** — Verify backend and/or frontend startup, health checks, stability, and cleanup
 
 #### CLEAN Verdict Requirements
 
-Zero BLOCKER findings, zero WARNING findings (or all justified), 100% feature completeness, 100% API endpoint completeness, all environment variables documented, and no scaffold code in production paths.
+Zero BLOCKER findings, zero WARNING findings (or all justified), 100% feature completeness, 100% API endpoint completeness, all environment variables documented, no scaffold code in production paths, and runtime verification results (or a documented exemption) that can pass final gatekeeper review.
 
 #### Reference Files
 
@@ -304,6 +304,7 @@ Zero BLOCKER findings, zero WARNING findings (or all justified), 100% feature co
 |---|---|
 | `references/scaffold-detection.md` | Exhaustive pattern catalog: comment markers, code patterns, data patterns, structural and config patterns |
 | `references/completeness-checklist.md` | Feature matrix, module checklist, API endpoints, migrations, config, CLEAN verdict criteria |
+| `references/runtime-verification.md` | Project classification, startup detection, health checks, simultaneous operation, and cleanup procedures |
 
 ---
 
@@ -337,39 +338,23 @@ The six skills are designed to be **complementary, not overlapping**. Each owns 
 ## How the Skills Connect
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        BUILD PIPELINE                                │
-│                                                                      │
-│  ┌──────────────────────────────────────────────────────────────┐    │
-│  │                    BUILD-MANAGEMENT                          │    │
-│  │    Orchestrates phased handoffs between all specialists      │    │
-│  └────┬──────────────┬──────────────┬──────────────┬───────────┘    │
-│       │              │              │              │                 │
-│       ▼              ▼              ▼              ▼                 │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐       │
-│  │ BOB-THE- │  │  TEST-   │  │SECURITY- │  │ CROSS-CHECK-  │       │
-│  │ BUILDER  │  │  BUILDER │  │ BUILDER  │  │ BUILD-CONFIRM │       │
-│  │          │  │          │  │          │  │               │       │
-│  │ Prod.    │  │ Test     │  │ Security │  │ Completeness  │       │
-│  │ Code     │  │ Suite    │  │ Audit    │  │ Scan          │       │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └───────┬───────┘       │
-│       │              │              │              │                 │
-│       └──────────────┴──────┬───────┴──────────────┘                │
-│                             ▼                                        │
-│                   ┌─────────────────────┐                            │
-│                   │   GATEKEEPER-BUILD  │                            │
-│                   │                     │                            │
-│                   │  1. Review output   │                            │
-│                   │  2. Challenge claims │                            │
-│                   │  3. Delegate issues  │                            │
-│                   │  4. Issue verdict    │                            │
-│                   └──────────┬──────────┘                            │
-│                              │                                       │
-│                   ┌──────────▼──────────┐                            │
-│                   │  FINAL BUILD PACKAGE │                            │
-│                   │  → Delivered to user │                            │
-│                   └─────────────────────┘                            │
-└──────────────────────────────────────────────────────────────────────┘
+APPROVED PLAN
+  -> build-management
+  -> bob-the-builder
+  -> gatekeeper-build
+  -> test-builder
+  -> gatekeeper-build
+  -> security-builder
+  -> gatekeeper-build
+  -> cross-check-build-confirm
+  -> gatekeeper-build
+  -> final build package
+
+Security remediation:
+  security-builder -> bob-the-builder -> gatekeeper-build -> resume pipeline
+
+Completeness remediation:
+  cross-check-build-confirm -> bob-the-builder -> cross-check-build-confirm -> gatekeeper-build
 ```
 
 **Connection points:**
@@ -378,7 +363,8 @@ The six skills are designed to be **complementary, not overlapping**. Each owns 
 2. **Gatekeeper Gates:** `gatekeeper-build` sits between every phase transition. No phase output reaches the next skill without adversarial validation.
 3. **Remediation Loops:** `gatekeeper-build` and `cross-check-build-confirm` both route findings back to `bob-the-builder` for correction, creating closed-loop quality feedback.
 4. **Security Remediation:** `security-builder` findings flow through `build-management` back to `bob-the-builder`, with `gatekeeper-build` validating the fixes.
-5. **Completeness Verification:** `cross-check-build-confirm` operates as a final sweep after all other phases, with its own loop back to `bob-the-builder` until the codebase is clean.
+5. **Completeness Verification:** `cross-check-build-confirm` operates as the final specialist sweep after all other phases, with its own loop back to `bob-the-builder` until the codebase is clean.
+6. **Final Phase 4 Gate:** A `CLEAN` completeness report still passes through `gatekeeper-build` before the final build package can be delivered.
 
 ---
 
@@ -397,12 +383,13 @@ The six skills are designed to be **complementary, not overlapping**. Each owns 
    ```
 5. The `build-management` skill orchestrates all phases autonomously.
 6. The `gatekeeper-build` skill validates every phase output behind the scenes.
-7. The `cross-check-build-confirm` skill performs final completeness verification.
-8. You receive a fully implemented, tested, security-audited, and completeness-verified build package.
+7. The `cross-check-build-confirm` skill performs the final specialist completeness scan.
+8. `gatekeeper-build` performs the final Phase 4 approval after the completeness scan returns `CLEAN`.
+9. You receive a fully implemented, tested, security-audited, completeness-verified, and gatekeeper-approved build package.
 
 ### Running a Single Skill
 
-You can bypass `build-management` and target a specific skill directly when you only need one part of the pipeline:
+You can bypass `build-management` and target a specific skill directly when you only need one part of the workflow. This is a manual, out-of-band usage pattern — useful for focused tasks, but it is **not** the canonical fully gated pipeline:
 
 1. **Provide context (if required by your agent):** Explicitly attach or reference the relevant `SKILL.md` file (e.g., `@workspace`, or dragging the file into chat).
 2. **Ask for a specific task** using natural language:
@@ -534,13 +521,14 @@ Build-Team_SkillSet/
 │   ├── SKILL.md
 │   └── references/
 │       ├── challenge-protocol.md          # 5-type challenge rubric with examples
-│       ├── review-criteria.md             # Per-phase checklists (code, tests, security)
+│       ├── review-criteria.md             # Per-phase checklists (code, tests, security, completeness)
 │       └── delegation-workflow.md         # Delegation formats and escalation
 └── cross-check-build-confirm/             # Implementation Completeness Scanner
     ├── SKILL.md
     └── references/
         ├── scaffold-detection.md          # Pattern catalog with regex and false positives
-        └── completeness-checklist.md      # Feature matrix, CLEAN verdict criteria
+        ├── completeness-checklist.md      # Feature matrix, CLEAN verdict criteria
+        └── runtime-verification.md        # Startup verification and health-check procedures
 ```
 
 ---

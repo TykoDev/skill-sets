@@ -1,15 +1,13 @@
 ---
 name: Code Quality, Efficiency & Best Practices Specialist
-description: >
+description: >-
   This skill should be used when the user asks to "review code quality",
-  "check coding standards", "assess maintainability", "review architecture
-  alignment", "check for technical debt", "evaluate efficiency",
-  "review best practices", "check style compliance", "assess clean code
-  principles", "review for performance issues", "check architecture drift",
-  or "evaluate code health". It evaluates maintainability, coding standards
-  adherence, efficiency, and architectural alignment using Clean Code principles,
-  language-specific style enforcement, architecture drift detection, and
-  industry-standard quality metrics.
+  "check coding standards", "assess maintainability", "check for technical
+  debt", "evaluate efficiency", "review best practices", "check architecture
+  drift", or "evaluate code health". It evaluates maintainability, standards
+  adherence, efficiency, and architectural alignment using Clean Code
+  principles, architecture drift detection, and industry-standard metrics.
+version: 1.0.0
 ---
 
 # Code Quality, Efficiency & Best Practices Specialist
@@ -105,6 +103,18 @@ Measure and report on quality indicators that predict long-term maintainability.
 - Test coverage gaps on critical paths
 - TODO/FIXME/HACK density and age
 
+**Technical Debt Quantification.** Where possible, provide concrete measurements:
+- CodeClimate maintainability rating (A through F, based on 10-point technical debt assessment)
+- SonarQube technical debt ratio (remediation cost / development cost, with thresholds: A ≤5%, B ≤10%, C ≤20%, D ≤50%, E >50%)
+- Cognitive complexity per function (threshold: ≤15 for most functions, ≤25 for complex business rules)
+
+**ISO/IEC 5055:2021 Reference.** The first international standard for automated source code quality measurement. Defines four quality characteristics measurable from source code:
+- **Reliability:** Defect patterns that cause failures (null pointers, resource leaks, unchecked returns)
+- **Security:** Weakness patterns mapped to CWE (injection, broken access control, crypto failures)
+- **Performance Efficiency:** Patterns causing excessive resource consumption (N+1 queries, memory bloat)
+- **Maintainability:** Patterns reducing changeability (high coupling, deep nesting, complex conditionals)
+When ISO 5055 compliance is relevant to the project, map quality findings to these four characteristics.
+
 **IEEE 730-2026 Alignment.** For organizations requiring formal SQA processes, map findings to the four mandatory phases: Initiating (scope/criteria), Planning (strategies/gates), Controlling (metrics monitoring), Executing (validation/review).
 
 Consult `references/metrics-and-debt.md` for detailed metric definitions, dashboard configurations, and IEEE 730-2026 process mapping.
@@ -145,9 +155,46 @@ Structure the quality review report as follows:
 - [Missing or recommended automated checks]
 ```
 
-## Handoff to Gatekeeper
+Append the following structured summary block at the end of every report for
+pipeline consumption:
 
-After completing the quality review report, submit it to the `gatekeeper-code` skill for adversarial validation. If no `gatekeeper-code` skill is available, self-validate by verifying that architectural drift claims reference specific documented constraints (ADRs, C4 models, or established conventions) and that efficiency findings cite measurable impact. The gatekeeper-code will challenge whether quality claims are substantiated, whether architectural assessments are backed by evidence, and whether tooling recommendations are appropriate for the project's context. For security-specific or performance-testing concerns discovered during quality review, defer to the security-review or dedicated performance testing skills respectively.
+```
+---
+## Pipeline Summary (Machine-Readable)
+
+phase_id: 3
+skill: quality-review
+status: COMPLETE
+risk_assessment: [High / Medium / Low]
+finding_count:
+  critical: [n]
+  major: [n]
+  minor: [n]
+checklist_coverage: [percentage]
+verdict: [Pass / Conditional / Fail]
+quality_score: [Pass / Conditional / Fail]
+architecture_drift: [None / Minor / Significant]
+tech_debt_impact: [Reduced / Neutral / Increased]
+key_concerns: [top 3 findings by severity, one line each]
+cross_references: [file:line pairs flagged for cross-skill attention]
+---
+```
+
+## Pipeline Integration
+
+**When invoked by code-chief (pipeline mode):**
+- Receive delegation with review target scope, Phase 1–2 context, and technology stack
+- Execute the full quality review workflow (standards, architecture, efficiency, tech debt)
+- Submit the completed report to code-chief (not directly to gatekeeper-code)
+- Include the structured pipeline summary block at the end of the report
+- Code-chief owns the gatekeeper-code validation cycle in pipeline mode
+
+**When invoked standalone:**
+- Execute the full quality review workflow independently
+- Submit the completed report to `gatekeeper-code` for adversarial validation
+- If no `gatekeeper-code` skill is available, self-validate by verifying that architectural drift claims reference specific documented constraints (ADRs, C4 models, or established conventions) and that efficiency findings cite measurable impact
+
+In both modes, the gatekeeper-code will challenge whether quality claims are substantiated, whether architectural assessments are backed by evidence, and whether tooling recommendations are appropriate for the project's context. For security-specific or performance-testing concerns discovered during quality review, defer to the security-review or dedicated performance testing skills respectively.
 
 ## Additional Resources
 

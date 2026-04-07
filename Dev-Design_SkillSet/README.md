@@ -11,7 +11,7 @@
 
 A modular suite of **seven specialized AI skills plus a tech-stack library** that orchestrates a fully autonomous software design specification workflow. This README assumes the combined **AI SkillSets** repository is your primary install path, while still staying usable if this SkillSet is published as a separate mirror.
 
-The canonical install rule is the same in both cases: copy the **inner skill folders** into your agent's skills directory, include `tech-stacks/` when you want the stack templates available, and start with the `commander` entry point. If your assistant does not auto-route installed skills, explicitly reference the relevant `<skill>/SKILL.md` file as a fallback.
+The canonical install rule is the same in both cases: copy the **inner skill folders** into your agent's skills directory as siblings, include the sibling `tech-stacks/` folder when you want the stack templates available, and start with the `commander` entry point. With that sibling layout, direct skill references to overlays resolve as `../tech-stacks/<overlay>.md`. If your assistant does not auto-route installed skills, explicitly reference the relevant `<skill>/SKILL.md` file as a fallback.
 
 ---
 
@@ -39,7 +39,7 @@ The canonical install rule is the same in both cases: copy the **inner skill fol
 
 ## Overview
 
-The **Dev-Design SkillSet** transforms an AI coding agent into a complete software design team. From a single user prompt, it coordinates a phased spec-driven development process where requirements, architecture, UI design, planning, and implementation steps are drafted by specialized agents and strictly validated by an adversarial gatekeeper.
+The **Dev-Design SkillSet** transforms an AI coding agent into a complete software design team. From a single user prompt, it coordinates a phased spec-driven development process where requirements, planning, architecture, UI design, and implementation steps are drafted by specialized agents and strictly validated by an adversarial gatekeeper.
 
 ### Key Principles
 
@@ -55,7 +55,7 @@ The **Dev-Design SkillSet** transforms an AI coding agent into a complete softwa
 
 ## Architecture
 
-The SkillSet follows an **orchestrator-led pipeline** where the `commander` manages transitions through five core phases, and `gatekeeper-design` guards every handoff:
+The SkillSet follows an **orchestrator-led pipeline** where the `commander` manages transitions through five core phases, owns the gatekeeper review cycle in pipeline mode, and `gatekeeper-design` guards every handoff:
 
 ```text
                         ┌─────────────────────┐
@@ -67,20 +67,18 @@ The SkillSet follows an **orchestrator-led pipeline** where the `commander` mana
                  ┌─────▶│      COMMANDER      │─────┐
                  │      └──────────┬──────────┘     │
                  │                 │                │
-                 │              Delegates           │ (After all 5
-                 │             to Phase N           │  phases approved)
+                 │        Delegates in order        │ (After all
+                 │  Researcher → Planner →          │  required phases
+                 │  Architect → Designer → Engineer │  are approved)
                  │                 │                │
                  │                 ▼                ▼
                  │      ┌─────────────────────┐  ┌─────────────────────┐
-    [APPROVE]    │ ┌───▶│  Phase 1: RESEARCH  │  │                     │
-  Output sent    │ │    │  Phase 2: PLANNER   │  │FINAL DESIGN PACKAGE │
- back to CMD     │ │    │  Phase 3: ARCHITECT │  │                     │
- to step forward │ │    │  Phase 4: DESIGNER  │  └─────────────────────┘
-                 │ │    │  Phase 5: ENGINEER  │
-                 │ │    └──────────┬──────────┘
+    [APPROVE]    │ ┌───▶│ Specialist returns  │  │                     │
+  Output sent    │ │    │ deliverable +       │  │FINAL DESIGN PACKAGE │
+ back to CMD     │ │    │ review packet       │  │                     │
+ to step forward │ │    └──────────┬──────────┘  └─────────────────────┘
                  │ │               │
-                 │ │          Output sent 
-                 │ │          for review
+                 │ │   Commander submits review
                  │ │               │
                  │ │               ▼
                  │ │    ┌─────────────────────┐
@@ -89,17 +87,17 @@ The SkillSet follows an **orchestrator-led pipeline** where the `commander` mana
                    │               │
                    │               ▼
                    │            [REJECT]
-                   └───────  Sends issues back
-                             to specific phase
-                            for mandatory fixes
+                   └─────── Commander routes
+                             findings back to
+                             the same phase
 ```
 
 ### Data Flow
 
 1. The user provides a product idea or feature request to the `commander`.
-2. The `commander` activates the `researcher` to gather requirements and define the domain.
-3. Every output passes to the `gatekeeper-design`. If rejected, it loops back; if approved, it returns to `commander`.
-4. The sequence repeats for `planner`, `architect`, `designer`, and `engineer`.
+2. The `commander` activates the `researcher`, then `planner`, then `architect`, then `designer`, then `engineer` as needed.
+3. In pipeline mode, each specialist returns a deliverable plus a review packet to `commander`.
+4. The `commander` submits every phase to `gatekeeper-design`, handles approval cycles, and routes findings back to the correct specialist.
 5. The `commander` compiles all gatekeeper-design-approved modules into a cohesive final design package.
 
 ---
@@ -115,7 +113,7 @@ The SkillSet follows an **orchestrator-led pipeline** where the `commander` mana
 | **Focus** | Pipeline oversight, state management, and user delivery |
 | **Methodology** | Phased delegation protocol, autonomous step transitions |
 
-The **Commander** is the central orchestrator. It receives user input, creates a phased execution plan, delegates to each specialist skill in sequence, collects gatekeeper-design-approved outputs, and delivers the final consolidated design specification package. It prevents context bloat by ensuring each sub-agent only gets the data it needs.
+The **Commander** is the central orchestrator. It receives user input, creates a phased execution plan, delegates to each specialist skill in sequence, owns the gatekeeper-design review loop in pipeline mode, collects approved outputs, and delivers the final consolidated design specification package. It also maintains the stack-lock registry across phases so downstream work inherits the correct overlays.
 
 #### Reference Files
 | File | Contents |
@@ -195,8 +193,13 @@ The **Designer** crafts the frontend strategy. It focuses on the UI framework pa
 #### Reference Files
 | File | Contents |
 |---|---|
-| `references/frontend-patterns.md` | Monolithic vs micro-frontends vs Jamstack tradeoffs |
 | `references/design-system-template.md` | Component specification format and accessibility checklists |
+| `references/frontend-patterns.md` | Monolithic vs micro-frontends vs Jamstack tradeoffs |
+| `references/layout-patterns.md` | Grid vs Flexbox selection, standard layout patterns, responsive strategy |
+| `references/styling-decision-matrix.md` | Styling framework and component library decision tree |
+| `references/ui-ux-standards.md` | Usability heuristics, interaction design, form design, navigation patterns |
+| `references/visual-design-guide.md` | Typography, color, spacing, theming, animation, and visual identity |
+| `references/page-templates/` | 19 page-template resources, including 1 selection guide and 18 concrete page templates |
 
 ---
 
@@ -228,7 +231,7 @@ The **Engineer** defines how the designs will be physically coded and deployed. 
 | **Focus** | Multi-dimensional constraint checking, error finding |
 | **Methodology** | Adversarial review, scoring rewards |
 
-The **Gatekeeper** is fundamentally different from the creative skills. It **produces no designs**. It receives completed blueprints from the creation skills and **ruthlessly challenges them** to ensure accuracy, safety, and coherence against upstream inputs before the report goes to the `commander`. It uses a scoring system highly incentivized to reject faulty logic.
+The **Gatekeeper** is fundamentally different from the creative skills. It **produces no designs**. It receives completed blueprints and **ruthlessly challenges them** to ensure accuracy, safety, and coherence against upstream inputs. In the full pipeline, `commander` owns the review loop and submits every phase. In standalone direct skill use, a specialist or user may submit a deliverable directly. It uses a scoring system highly incentivized to reject faulty logic.
 
 #### Reference Files
 | File | Contents |
@@ -240,7 +243,12 @@ The **Gatekeeper** is fundamentally different from the creative skills. It **pro
 
 ## Tech Stacks Library
 
-The Dev-Design SkillSet includes a `tech-stacks` library holding 14 different stack templates. Skills like `architect`, `designer`, and `engineer` reference these exact templates to ensure implementation instructions match modern standards without hallucinating configuration details.
+The Dev-Design SkillSet includes a `tech-stacks` library holding 14 stack overlay templates. The expected install layout is a sibling skills root containing `architect/`, `designer/`, `engineer/`, and `tech-stacks/`, so direct skill references resolve as `../tech-stacks/<overlay>.md`.
+
+Ownership is explicit:
+- `architect` locks the backend/runtime overlay
+- `designer` locks the frontend overlay
+- `engineer` inherits both locks and may not silently substitute stacks
 
 | Backend Templates | Frontend Templates |
 |---|---|
@@ -267,37 +275,29 @@ The Dev-Design SkillSet includes a `tech-stacks` library holding 14 different st
 
 ## How the Skills Connect
 
-```
-                        ┌─────────────────────┐
-                        │     USER REQUEST     │
-                        │ "Build a SaaS app"   │
-                        └──────────┬──────────┘
-                                   ▼
-    ┌──────────────────────────────────────────────────────────────┐
-    │                        COMMANDER                             │
-    │   Orchestrates phased handoffs between distinct specialists  │
-    └─────┬──────────────────┬─────────────────┬─────────────┬─────┘
-          ▼                  ▼                 ▼             ▼
-    ┌─────────────┐   ┌─────────────┐   ┌────────────┐  ┌──────────┐
-    │  RESEARCHER │ ─▶│  ARCHITECT  │ ─▶│  DESIGNER  │─▶│ ENGINEER │ (and Planner)
-    └──────┬──────┘   └──────┬──────┘   └──────┬─────┘  └────┬─────┘
-           │                 │                 │             │
-           └─────────────────┴───────┬─────────┴─────────────┘
-                                     ▼
-                            ┌────────────────┐
-                            │GATEKEEPER-DESIGN│ ──(Rejects & delegates back if flawed)
-                            └────────┬───────┘
-                                     ▼
-                      ┌─────────────────────────────┐
-                      │    FINAL DESIGN PACKAGE     │
-                      └─────────────────────────────┘
+```text
+USER REQUEST
+  ↓
+COMMANDER
+  ↓
+RESEARCHER → gatekeeper-design → commander
+  ↓
+PLANNER → gatekeeper-design → commander
+  ↓
+ARCHITECT + Backend Stack Lock → gatekeeper-design → commander
+  ↓
+DESIGNER + Frontend Stack Lock → gatekeeper-design → commander
+  ↓
+ENGINEER + Inherited Stack Locks → gatekeeper-design → commander
+  ↓
+FINAL DESIGN PACKAGE
 ```
 
 **Connection points:**
 1. **Phased Delegation:** `commander` orchestrates the sequential workflow.
-2. **Context Passing:** The `researcher`'s domain model defines constraints that the `architect` must follow. 
-3. **Template Locking:** The `architect` and `designer` lock in files from `tech-stacks`, which the `engineer` inherits.
-4. **Adversarial Handoffs:** Every handoff is blocked directly by `gatekeeper-design`. `commander` cannot advance to phase N+1 until `gatekeeper-design` approves phase N.
+2. **Context Passing:** The `researcher`'s domain model and captured tech constraints define boundaries that later phases must follow.
+3. **Template Locking:** `architect` locks the backend overlay from the sibling `tech-stacks/` library, `designer` locks the frontend overlay, and `engineer` inherits both.
+4. **Adversarial Handoffs:** Every handoff is blocked directly by `gatekeeper-design`. In pipeline mode, `commander` owns that review cycle and cannot advance to phase N+1 until approval is recorded.
 
 ---
 
@@ -305,34 +305,37 @@ The Dev-Design SkillSet includes a `tech-stacks` library holding 14 different st
 
 > **Activation note:** The canonical entry point is `commander`. In agentic frameworks that auto-route installed skills, prompt that entry point directly. In assistants that do not auto-route skills, reference `commander/SKILL.md` or another specific skill file explicitly as a fallback.
 
+Use the plain skill name in prompts by default. Some environments also expose installed skills as slash commands such as `/commander`.
+
 ### Running the Full Autonomous Workflow (Agentic Frameworks)
 
 1. **Install the inner skill folders** in your configured skills directory.
 2. **Open your AI coding agent** (Codex, Kilo Code, or OpenCode).
 3. **Request the `commander` entry point:**
    ```
-   "Use the commander skill to design a new serverless booking system"
+   "Use commander to design a new serverless booking system"
    ```
-4. The `commander` skill activates the `researcher`.
-5. The `gatekeeper-design` skill checks outputs automatically behind the scenes.
-6. You receive a fully specified, architecturally sound design package.
+4. The `commander` skill runs the full phase order: `researcher -> planner -> architect -> designer -> engineer` as applicable.
+5. Each specialist returns a deliverable and review packet to `commander`.
+6. `commander` submits each phase to `gatekeeper-design` behind the scenes and manages approval loops.
+7. You receive a fully specified, architecturally sound design package with backend/frontend stack locks.
 
 ### Running a Single Skill
 
-You can bypass the `commander` and target a specific discipline directly:
+You can bypass the `commander` and target a specific discipline directly. In that standalone mode, the specialist may self-run `gatekeeper-design` for its own deliverable.
 
 1. **Provide context (if required by your agent):** Explicitly attach or reference the relevant `SKILL.md` file (e.g., `@workspace`, or dragging the file into chat).
 2. **Ask for a specific design task** using natural language:
-   - `"Use researcher/SKILL.md to map bounded contexts for an e-commerce platform"` 
-   - `"Read architect/SKILL.md and generate a C4 diagram for my current codebase"` 
-   - `"Run gatekeeper-design/SKILL.md to fiercely validate the attached SRS document"` 
-   - `"Check tech-stacks/react-nextjs.md and scaffold a project aligning to these rules"` 
+   - `"Read researcher/SKILL.md and map bounded contexts for an e-commerce platform"`
+   - `"Read architect/SKILL.md and generate a C4 diagram for my current codebase"`
+   - `"Read gatekeeper-design/SKILL.md and validate the attached SRS document"`
+   - `"Read designer/SKILL.md and use the sibling tech-stacks/react-nextjs.md overlay as the frontend reference for this design"`
 
 ---
 
 ## Installation Guide
 
-Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory. To install them, copy the **inner skill folders** from `Dev-Design_SkillSet/` into the skills directory your agent is configured to read. Copy `tech-stacks/` as well when you want the 14 stack templates available to the design flow.
+Each skill relies on a `SKILL.md` file (the main instructions) and a `references/` directory. To install them, copy the **inner skill folders** from `Dev-Design_SkillSet/` into the skills directory your agent is configured to read. Copy `tech-stacks/` as a sibling folder as well when you want the 14 stack overlay templates available to the design flow.
 
 This README assumes you are working from the combined AI SkillSets repository. If you are using a separately published mirror of this SkillSet, the same install rule applies; only the surrounding repo path changes.
 
@@ -350,6 +353,9 @@ Copy these folders, not the top-level `Dev-Design_SkillSet/` directory:
 - `tech-stacks/`
 
 Use `.agents/skills/` when your environment supports a shared skills directory, or the configured equivalent for your assistant.
+
+Keep them as siblings under the same skills root so references like `references/...`
+and `../tech-stacks/<overlay>.md` resolve correctly.
 
 ### Standard Assistants (Claude Code and GitHub Copilot)
 
@@ -379,7 +385,7 @@ GitHub Copilot does not guarantee automatic routing from a custom skills folder.
 
 If you are using a dedicated agentic runner:
 1. Create the environment's skills directory, typically `.agents/skills/` or the framework-specific equivalent.
-2. Copy the individual folders (`commander`, `researcher`, and the rest) into that directory, plus `tech-stacks/` when you want the template library available.
+2. Copy the individual folders (`commander`, `researcher`, and the rest) into that directory, plus the sibling `tech-stacks/` folder when you want the template library available.
 3. Prompt the `commander` entry point directly.
 4. If the framework does not auto-route as expected, fall back to `commander/SKILL.md`.
 
@@ -406,13 +412,20 @@ Dev-Design_SkillSet/
 ├── designer/                          # UI/UX Architecture Specialist
 │   ├── SKILL.md
 │   └── references/
+│       ├── design-system-template.md
+│       ├── frontend-patterns.md
+│       ├── layout-patterns.md
+│       ├── styling-decision-matrix.md
+│       ├── ui-ux-standards.md
+│       ├── visual-design-guide.md
+│       └── page-templates/            # 19 page-template resources (1 selection guide + 18 concrete templates)
 ├── engineer/                          # Implementation & DevOps Specialist
 │   ├── SKILL.md
 │   └── references/
 ├── gatekeeper-design/                  # Adversarial Validator
 │   ├── SKILL.md
 │   └── references/
-└── tech-stacks/                       # Tech stack configurations
+└── tech-stacks/                       # Tech stack overlay templates
     ├── angular.md
     ├── astro.md
     ├── bun-typescript.md

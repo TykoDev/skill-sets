@@ -7,8 +7,9 @@ description: >-
   "run the Dev Design SkillSet", "start the design pipeline", or provides any
   initial project description that requires a comprehensive design specification.
   This is the entry point and orchestrator for the entire Dev Design SkillSet —
-  it receives user input, delegates to specialist skills, manages gatekeeper-design
-  reviews, and delivers the final consolidated design package.
+  it receives user input, delegates to specialist skills, owns the
+  gatekeeper-design review cycle in pipeline mode, and delivers the final
+  consolidated design package.
 version: 1.0.0
 ---
 
@@ -18,15 +19,16 @@ version: 1.0.0
 
 Commander is the single entry point for the Dev Design SkillSet. It receives
 the user's project description, orchestrates all specialist skills in sequence,
-manages gatekeeper-design approval cycles, and delivers a consolidated design
-specification package. The user interacts only with commander — all other
-skills are invoked autonomously.
+owns every gatekeeper-design approval cycle in pipeline mode, and delivers a
+consolidated design specification package. The user interacts only with
+commander during the full pipeline. Specialists may self-run gatekeeper-design
+only when they are invoked directly outside the commander pipeline.
 
 ## Core Principle
 
 > "Commander drives the process proactively. It does not wait for instructions
-> between phases — it pushes forward, resolves ambiguity where possible, and
-> only returns to the user when it cannot proceed without their input."
+> between phases, and it does not outsource review ownership. In pipeline mode,
+> commander is the only skill that advances work through gatekeeper-design."
 
 ---
 
@@ -38,10 +40,12 @@ Upon receiving user input:
 
 1. **Extract project essence**: What is being built, for whom, and why?
 2. **Identify constraints**: Timeline, budget, team, regulatory, technical
-3. **Assess scope**: Is this a full design spec or a targeted sub-task?
-4. **Classify complexity**: Simple (skip some phases) or Full (all phases)
-5. **Confirm understanding**: Summarize back to user and request confirmation
-   before proceeding — this is the ONLY mandatory user checkpoint.
+3. **Capture user technology constraints/preferences**: Required runtimes,
+   prohibited platforms, hosting boundaries, vendor preferences, legacy constraints
+4. **Assess scope**: Is this a full design spec or a targeted sub-task?
+5. **Classify complexity**: Simple (skip some phases) or Full (all phases)
+6. **Confirm understanding**: Summarize back to user and request confirmation
+   before proceeding — this is the ONLY mandatory user checkpoint
 
 If the user's input is ambiguous, ask clarifying questions. Prefer a single
 batch of questions over multiple rounds.
@@ -49,91 +53,108 @@ batch of questions over multiple rounds.
 ### Phase 1: Requirements → researcher
 
 **Delegate to**: `researcher` skill
-**Input provided**: User's project description, constraints, scope
-**Expected output**: Software Requirements Specification (SRS) + Domain Analysis
-**Gatekeeper cycle**: Submit to `gatekeeper-design` → approve/revise → resubmit if needed
-
-#### Delegation Template
-
-```markdown
-## COMMANDER DELEGATION: Phase 1 — Requirements & Domain Analysis
-
-### Original User Request
-[Paste the user's project description verbatim]
-
-### Constraints Identified
-- Timeline: [if specified]
-- Team: [if specified]
-- Budget: [if specified]
-- Regulatory: [if specified]
-- Technical: [if specified]
-
-### Scope
-[Full system / specific feature / specific component]
-
-### Expected Deliverables
-1. Software Requirements Specification (SRS)
-2. Domain Analysis (bounded contexts, event storming results)
-
-### Instruction
-Execute the researcher skill workflow. Produce comprehensive, testable
-requirements. Submit to gatekeeper-design when complete.
-```
+**Input provided**: User request, constraints, scope, user technology constraints/preferences
+**Expected output**:
+- Software Requirements Specification (SRS)
+- Domain Analysis
+- Gatekeeper-ready review packet
+**Commander-owned gatekeeper cycle**:
+1. Researcher returns deliverables and review packet
+2. Commander submits them to `gatekeeper-design`
+3. Commander forwards any REVISE findings back to researcher
 
 ### Phase 2: Project Plan → planner
 
 **Delegate to**: `planner` skill
 **Input provided**: Gatekeeper-design-approved SRS + domain analysis
-**Expected output**: Project Plan with milestones, risk register, rollout strategy
-**Gatekeeper cycle**: Submit to `gatekeeper-design` → approve/revise
+**Expected output**:
+- Project Plan with milestones, risks, rollout strategy, and technology decision gates
+- Gatekeeper-ready review packet
+**Commander-owned gatekeeper cycle**: identical pattern to Phase 1
 
 ### Phase 3: Architecture → architect
 
 **Delegate to**: `architect` skill
 **Input provided**: Approved SRS + approved project plan
-**Expected output**: Arc42 architecture document, C4 diagrams, ADRs, API contracts
-**Gatekeeper cycle**: Submit to `gatekeeper-design` → approve/revise
+**Expected output**:
+- Arc42 architecture document
+- C4 diagrams
+- ADRs
+- API contracts
+- Data model
+- Backend Stack Lock
+- Gatekeeper-ready review packet
+**Commander-owned gatekeeper cycle**: identical pattern to Phase 1
 
 ### Phase 4: Frontend Design → designer
 
 **Delegate to**: `designer` skill
-**Input provided**: Approved SRS + approved architecture
-**Expected output**: Frontend architecture spec, component system, state management
-**Gatekeeper cycle**: Submit to `gatekeeper-design` → approve/revise
+**Input provided**: Approved SRS + approved architecture + Backend Stack Lock
+**Expected output**:
+- Frontend architecture specification
+- Frontend Stack Lock
+- Component system and state management plan
+- Gatekeeper-ready review packet
+**Commander-owned gatekeeper cycle**: identical pattern to Phase 1
 
 **Note**: Skip this phase if the project has no frontend (pure API/backend service).
 
 ### Phase 5: Implementation Spec → engineer
 
 **Delegate to**: `engineer` skill
-**Input provided**: All previously approved deliverables
-**Expected output**: Implementation spec (repo structure, testing, CI/CD, Docker,
-security, observability)
-**Gatekeeper cycle**: Submit to `gatekeeper-design` → approve/revise
+**Input provided**: All previously approved deliverables, including Backend Stack Lock
+and Frontend Stack Lock (if applicable)
+**Expected output**:
+- Implementation specification
+- Inherited Stack Locks record
+- Gatekeeper-ready review packet
+**Commander-owned gatekeeper cycle**: identical pattern to Phase 1
+
+Consult `references/handoff-templates.md` for exact delegation wording.
 
 ---
 
 ## Gatekeeper Management Protocol
 
-For each phase:
+For each phase in pipeline mode:
 
-1. Receive the deliverable from the specialist skill
-2. Submit to `gatekeeper-design` for adversarial review
-3. If **APPROVED**: Proceed to next phase
-4. If **REVISE**: Forward gatekeeper-design's findings back to the specialist skill
-   with instructions to address mandatory fixes; resubmit to gatekeeper-design
-5. If **ESCALATE**: Re-evaluate the delegation; clarify scope; re-delegate
-   or consult user if ambiguity cannot be resolved
-6. Maximum revision cycles per phase: 3 (if still failing after 3 revisions,
-   escalate to user with findings)
+1. Receive the deliverable and review packet from the specialist skill
+2. Verify the specialist did not self-submit the pipeline deliverable
+3. Submit the package to `gatekeeper-design` for adversarial review
+4. If **APPROVED**: Record the approval and proceed to the next phase
+5. If **REVISE**: Forward gatekeeper-design's findings back to the same specialist
+   with instructions to address mandatory fixes, then re-submit the revised deliverable
+6. If **ESCALATE**: Re-evaluate delegation, clarify scope, re-delegate, or consult user
+7. Maximum revision cycles per phase: 3; if still failing, escalate to the user
+
+Commander is the sole owner of the gatekeeper cycle in pipeline mode. A
+specialist may self-run `gatekeeper-design` only during standalone use outside
+this orchestration flow.
 
 Consult `references/workflow-protocol.md` for detailed state management.
 
 ---
 
+## Stack-Lock Registry
+
+Commander maintains a running registry across phases:
+
+- **User constraints/preferences** — captured during intake and Phase 1
+- **Backend Stack Lock** — created by architect from the sibling skills-root
+  `tech-stacks/` library
+- **Frontend Stack Lock** — created by designer from the sibling skills-root
+  `tech-stacks/` library
+- **Exceptions** — any justified deviations from the chosen overlays
+- **Inherited Stack Locks** — engineer's implementation record of the approved locks
+
+Commander MUST pass this registry forward in every downstream delegation once a
+field becomes available.
+
+---
+
 ## Final Consolidation and Delivery
 
-After all phases are gatekeeper-design-approved:
+After all required phases are gatekeeper-design-approved:
 
 ### Step 1: Compile Design Package
 
@@ -145,18 +166,22 @@ Assemble all approved deliverables into a single consolidated package:
 ## Package Contents
 1. Software Requirements Specification (SRS)
 2. Domain Analysis (bounded contexts, domain model)
-3. Project Plan (milestones, risks, rollout strategy)
+3. Project Plan (milestones, risks, rollout strategy, decision gates)
 4. Architecture Document (Arc42, C4 diagrams, ADRs)
-5. API Contracts (OpenAPI/AsyncAPI specifications)
-6. Frontend Architecture Specification
-7. Implementation Specification
-8. Gatekeeper-Design Review Reports (all approval records)
+5. Backend Stack Lock
+6. API Contracts (OpenAPI/AsyncAPI specifications)
+7. Frontend Architecture Specification
+8. Frontend Stack Lock
+9. Implementation Specification
+10. Inherited Stack Locks
+11. Gatekeeper-Design Review Reports (all approval records)
 
-## Tech Stack Selection
-- Backend: [Selected stack from tech-stacks/]
-- Frontend: [Selected stack from tech-stacks/]
-- Database: [Selected]
-- Infrastructure: [Selected]
+## Stack Lock Summary
+- User constraints/preferences: [Summary]
+- Backend overlay: [Exact overlay file from sibling `tech-stacks/`]
+- Frontend overlay: [Exact overlay file from sibling `tech-stacks/` or N/A]
+- Version tuples: [Runtime/framework/database/tooling]
+- Exceptions: [None or listed with ADR references]
 
 ## Next Actions
 [Prioritized list of what to do first when implementation begins]
@@ -166,8 +191,10 @@ Assemble all approved deliverables into a single consolidated package:
 
 Before final handover, verify consistency across all deliverables:
 - Requirements → Architecture alignment
-- Architecture → Implementation alignment
-- Frontend → Backend API contract alignment
+- Planner decision gates → Architecture and implementation readiness
+- Backend Stack Lock → Architecture ADRs, API contracts, and deployment topology
+- Frontend Stack Lock → Frontend architecture, routing, and API consumption
+- Inherited Stack Locks → Engineer implementation plan
 - Security requirements → Security controls mapping
 - NFRs → Observability/SLO coverage
 
@@ -177,7 +204,7 @@ Present the complete design package to the user with:
 - Table of contents with links to each deliverable
 - Executive summary (one paragraph)
 - Recommended next actions
-- Tech stack recommendations with rationale
+- Stack lock summary with rationale
 - Open questions or deferred decisions (if any)
 
 ---
@@ -198,9 +225,10 @@ Commander may skip phases when scope doesn't warrant them:
 ### Proactive Driving
 
 Commander MUST proactively:
-- Make reasonable assumptions when information is non-critical (document them)
-- Select tech stacks based on requirements if user didn't specify
-- Resolve minor ambiguities without user consultation
+- Make reasonable assumptions when information is non-critical and document them
+- Surface user technology constraints early and keep them visible across phases
+- Ensure architect and designer lock exact overlays when the user did not specify them
+- Resolve minor ambiguities without unnecessary user consultation
 - Push each phase forward without waiting for user prompting
 
 ---

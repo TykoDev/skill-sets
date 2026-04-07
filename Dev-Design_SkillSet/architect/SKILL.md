@@ -19,13 +19,32 @@ This skill performs Phase 3 of the Dev Design SkillSet pipeline. It takes
 gatekeeper-design-approved requirements (from researcher) and project plan (from
 planner) and produces the complete system architecture: C4 diagrams, Arc42
 documentation, Architecture Decision Records, API contracts, data model,
-and deployment topology.
+deployment topology, and the authoritative backend/runtime stack lock that
+downstream phases must inherit.
 
 ## When to Activate
 
 Activate when commander delegates Phase 3 (Architecture) after the
 researcher's requirements and planner's project plan have been approved
-by gatekeeper-design.
+by gatekeeper-design, or when a user directly requests a system architecture,
+C4 diagrams, ADRs, API contracts, or a backend/runtime stack recommendation.
+
+---
+
+## Execution Modes
+
+### Pipeline Mode (Commander-Delegated)
+
+In pipeline mode delegated by commander, do NOT submit to `gatekeeper-design`
+yourself. Produce the deliverables plus a gatekeeper-ready review packet and
+return both to commander. Commander owns the review cycle.
+
+### Standalone Mode (Direct User Activation)
+
+When activated directly by a user, this skill owns the final review loop for
+its own deliverables. Produce the architecture package, submit it to
+`gatekeeper-design`, address any REVISE findings, and return the approved
+result plus the final review report.
 
 ---
 
@@ -47,7 +66,32 @@ architecture style. Document the decision as ADR-001.
 
 Consult `references/architecture-patterns.md` for detailed pattern descriptions.
 
-### Step 2: Create C4 Diagrams
+### Step 2: Lock Backend Stack Template
+
+Select the backend/runtime overlay from the sibling skills-root library at
+`../tech-stacks/`. The selected overlay becomes the **Backend Stack Lock** for
+the rest of the pipeline.
+
+Choose exactly one backend overlay file:
+- `../tech-stacks/node-typescript.md`
+- `../tech-stacks/bun-typescript.md`
+- `../tech-stacks/deno-typescript.md`
+- `../tech-stacks/python-fastapi.md`
+- `../tech-stacks/rust-axum.md`
+- `../tech-stacks/go-gin.md`
+- `../tech-stacks/dotnet-aspnet.md`
+
+Document the lock as a dedicated section containing:
+- Overlay file name
+- Runtime/framework/database/validation version tuple
+- Decision drivers and rationale
+- Constraints inherited from researcher/planner
+- Explicit deviations from the overlay, each justified and cross-linked to an ADR
+
+Do not leave the stack implicit in ADRs alone. The backend stack lock is a
+first-class deliverable that downstream phases must inherit.
+
+### Step 3: Create C4 Diagrams
 
 Produce diagrams at three levels using Mermaid DSL:
 
@@ -77,7 +121,7 @@ C4Context
     Rel(system, email, "Sends emails", "SMTP/API")
 ```
 
-### Step 3: Produce Arc42 Architecture Document
+### Step 4: Produce Arc42 Architecture Document
 
 Follow the Arc42 v9.0 template structure. The document MUST include:
 
@@ -96,7 +140,7 @@ Follow the Arc42 v9.0 template structure. The document MUST include:
 
 Consult `references/arc42-template.md` for the complete template.
 
-### Step 4: Write Architecture Decision Records
+### Step 5: Write Architecture Decision Records
 
 For every significant technical decision, create an ADR using MADR v4.0:
 
@@ -140,7 +184,7 @@ Chosen option: "[Option]", because [justification].
 - Bad: [Con]
 ```
 
-### Step 5: Define API Contracts
+### Step 6: Define API Contracts
 
 Produce API contract specifications:
 - **REST APIs**: OpenAPI 3.1 specification
@@ -151,7 +195,7 @@ Produce API contract specifications:
 API contracts MUST define: endpoints, request/response schemas, error formats
 (RFC 7807), authentication requirements, rate limits, and versioning strategy.
 
-### Step 6: Design Data Model
+### Step 7: Design Data Model
 
 Produce the logical data model:
 - Entity-relationship diagrams (Mermaid ERD)
@@ -161,7 +205,7 @@ Produce the logical data model:
 - Migration strategy and rollback plan
 - Data retention and privacy (GDPR/regulatory compliance)
 
-### Step 7: Define Deployment Topology
+### Step 8: Define Deployment Topology
 
 Specify the infrastructure architecture:
 - Environment list (dev, staging, production)
@@ -171,10 +215,22 @@ Specify the infrastructure architecture:
 - Secrets management approach
 - Disaster recovery and backup strategy
 
-### Step 8: Submit to Gatekeeper
+### Step 9: Prepare Review Handoff
 
 Package the complete architecture document (Arc42), C4 diagrams, ADRs,
-and API contracts. Submit to `gatekeeper-design` for adversarial review.
+API contracts, data model, deployment topology notes, and Backend Stack Lock
+with a review packet containing:
+- Source skill: `architect`
+- Deliverables produced
+- Approved upstream context used
+- Backend Stack Lock summary, including overlay file and version tuple
+- Any approved deviations or unresolved exceptions
+
+If operating in pipeline mode, return the deliverables and review packet to
+commander for gatekeeper submission.
+
+If operating in standalone mode, submit the deliverables and review packet to
+`gatekeeper-design`, address any REVISE findings, and resubmit until APPROVED.
 
 ---
 
@@ -186,6 +242,13 @@ The architect produces:
 2. **ADR Collection** — One ADR per significant decision
 3. **API Contracts** — OpenAPI/AsyncAPI specifications
 4. **Data Model** — ERD with entity definitions
+5. **Backend Stack Lock** — Exact `../tech-stacks/*.md` overlay selection,
+   version tuple, and justified deviations
+
+In pipeline mode, return the deliverables with a gatekeeper-ready review packet.
+
+In standalone mode, return the approved deliverables plus the final
+gatekeeper-design review report.
 
 ---
 

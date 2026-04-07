@@ -4,11 +4,11 @@ description: >-
   This skill should be used when a design specification, architecture document,
   project plan, requirements document, implementation spec, or any deliverable
   from the Dev Design SkillSet pipeline requires adversarial review before
-  handover. Trigger when the user or commander asks to "review this deliverable",
-  "validate the architecture", "gate-check the plan", "approve handover",
-  "find errors in this spec", or "quality-gate this output". This skill acts as
-  an adversarial quality gate rewarded for identifying errors, failures,
-  inconsistencies, lies, and omissions.
+  handover. Trigger when the user, commander, or a directly invoked specialist
+  asks to "review this deliverable", "validate the architecture", "gate-check
+  the plan", "approve handover", "find errors in this spec", or "quality-gate
+  this output". This skill acts as an adversarial quality gate rewarded for
+  identifying errors, failures, inconsistencies, lies, and omissions.
 version: 1.0.0
 ---
 
@@ -18,19 +18,43 @@ version: 1.0.0
 
 This skill operates as the adversarial review gate for the Dev Design SkillSet
 pipeline. Every deliverable produced by `researcher`, `planner`, `architect`,
-`designer`, or `engineer` MUST pass through gatekeeper-design before being accepted by
-`commander` for final handover. The gatekeeper-design is explicitly incentivized to find
-real errors, inconsistencies, omissions, lies, and failures — approval is earned,
-not given.
+`designer`, or `engineer` MUST pass through gatekeeper-design before being
+accepted for final handover. Approval is earned, not given.
+
+In the full pipeline, commander owns the review loop and submits every phase to
+gatekeeper-design. In direct standalone use, a specialist or user may submit a
+deliverable directly.
 
 ## Core Principle
 
 > "The gatekeeper is rewarded for finding genuine problems. A report that finds
 > nothing is the most suspicious report of all."
 
-Approach every deliverable with professional skepticism. Assume errors exist until
-proven otherwise. The objective is not to block progress but to ensure only
-high-quality, accurate, and internally consistent deliverables proceed.
+Approach every deliverable with professional skepticism. Assume errors exist
+until proven otherwise. The objective is not to block progress but to ensure
+only high-quality, accurate, and internally consistent deliverables proceed.
+
+---
+
+## Review Modes
+
+### Pipeline Mode (Commander-Owned Review Cycle)
+
+- Review requests come from `commander`
+- Commander provides phase metadata, upstream approvals, and stack-lock context
+- Gatekeeper returns verdicts and findings to commander
+- Commander, not gatekeeper, routes revisions back to the source specialist
+
+### Standalone Mode (Direct Skill/User Review)
+
+- Review requests come from a directly invoked specialist or a user
+- Gatekeeper returns verdicts and findings to that caller
+- The caller may address findings and resubmit directly
+
+Always identify the mode before reviewing. If the mode is ambiguous, infer it
+from the caller and review packet. In pipeline mode, never instruct a
+specialist to self-resubmit directly to gatekeeper-design; commander owns that
+loop.
 
 ---
 
@@ -39,15 +63,17 @@ high-quality, accurate, and internally consistent deliverables proceed.
 ### Step 1: Identify Review Target
 
 Confirm the exact deliverable under review:
+- **Review mode**: Pipeline or standalone?
 - **Source skill**: Which skill produced this (researcher/planner/architect/designer/engineer)?
 - **Document type**: Requirements, project plan, architecture doc, frontend spec, implementation spec?
 - **Upstream context**: What user request or commander delegation initiated this work?
+- **Stack-lock context**: What user tech constraints, backend stack lock, frontend stack lock, or inherited locks apply?
 
 ### Step 2: Reconnect to Original Intent
 
-Before examining content, re-read the original user request and commander delegation
-instructions. Verify the deliverable addresses what was actually asked for, not a
-drifted interpretation.
+Before examining content, re-read the original user request and commander
+delegation instructions when available. Verify the deliverable addresses what
+was actually asked for, not a drifted interpretation.
 
 ### Step 3: Execute Multi-Dimensional Review
 
@@ -62,7 +88,8 @@ dimensions. For each dimension, actively search for failures.
 4. **Feasibility** — Can the specified approach actually be implemented?
 5. **Specificity** — Are recommendations concrete and actionable, or vague platitudes?
 6. **Cross-deliverable alignment** — Does this deliverable align with outputs from other skills?
-7. **Scope adherence** — Does the deliverable stay within its defined scope without overreach?
+7. **Stack-lock lineage** — Does the deliverable respect upstream tech constraints and approved overlay locks?
+8. **Scope adherence** — Does the deliverable stay within its defined scope without overreach?
 
 ### Step 4: Score and Classify Findings
 
@@ -79,8 +106,8 @@ Classify every finding by severity:
 Based on findings, issue one of three verdicts:
 
 - **APPROVED** — Zero critical findings, zero or few major findings. Deliverable proceeds.
-- **REVISE** — Critical or significant major findings exist. Return to source skill with mandatory fixes.
-- **ESCALATE** — Fundamental misalignment with user intent or irreconcilable contradictions. Return to commander for re-delegation.
+- **REVISE** — Critical or significant major findings exist. Return to the caller with mandatory fixes.
+- **ESCALATE** — Fundamental misalignment with user intent or irreconcilable contradictions. Return to commander in pipeline mode, or to the direct caller in standalone mode.
 
 ---
 
@@ -90,9 +117,9 @@ Apply these techniques from `references/adversarial-protocol.md`:
 
 1. **Inversion test**: For each recommendation, ask "what if we did the opposite — would the document address why?"
 2. **Omission scan**: List what a complete deliverable of this type SHOULD contain, then check for missing items
-3. **Contradiction hunt**: Cross-reference claims across sections — do data models match API contracts? Do requirements match architecture?
-4. **Specificity probe**: Replace each recommendation with "do it well" — if meaning is preserved, the recommendation lacks specificity
-5. **Feasibility challenge**: For each technical decision, verify the stated approach actually works with the stated tech stack and version
+3. **Contradiction hunt**: Cross-reference claims across sections and deliverables
+4. **Specificity probe**: Replace each recommendation with "do it well"; if meaning is preserved, it lacks specificity
+5. **Feasibility challenge**: Verify the stated approach actually works with the stated tech stack, overlay lock, and version tuple
 6. **Lie detection**: Verify quantitative claims (performance numbers, version numbers, feature availability) against known facts
 
 ---
@@ -103,6 +130,7 @@ Apply these techniques from `references/adversarial-protocol.md`:
 # GATEKEEPER REVIEW REPORT
 
 ## Metadata
+- **Review mode**: [Pipeline / Standalone]
 - **Deliverable**: [document name/type]
 - **Source skill**: [researcher/planner/architect/designer/engineer]
 - **Review date**: [YYYY-MM-DD]
@@ -110,6 +138,12 @@ Apply these techniques from `references/adversarial-protocol.md`:
 
 ## Intent Alignment
 [Does this deliverable address the original user request? YES/NO + explanation]
+
+## Stack-Lock Context
+- **User constraints/preferences**: [summary]
+- **Backend Stack Lock**: [exact overlay file / N/A]
+- **Frontend Stack Lock**: [exact overlay file / N/A]
+- **Inherited Stack Locks**: [summary / N/A]
 
 ## Findings Summary
 - Critical: [count]
@@ -134,11 +168,14 @@ Apply these techniques from `references/adversarial-protocol.md`:
 - **Note**: [Description and suggestion]
 
 ## Positive Observations
-- [What was done well — acknowledge quality work]
+- [What was done well]
 
 ## Verdict Justification
 [Explain the verdict decision and conditions for approval if REVISE]
 ```
+
+In pipeline mode, address verdict routing and resubmission expectations to
+commander. In standalone mode, address them to the direct caller.
 
 ---
 

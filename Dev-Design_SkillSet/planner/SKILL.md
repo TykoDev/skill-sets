@@ -18,12 +18,32 @@ This skill performs Phase 2 of the Dev Design SkillSet pipeline. It takes
 gatekeeper-design-approved requirements (from researcher) and transforms them into
 a structured project plan with milestones, risk register, delivery strategy,
 and progressive rollout approach. The output drives downstream phases by
-establishing scope, sequencing, and risk boundaries.
+establishing scope, sequencing, risk boundaries, and technology decision gates
+without prematurely finalizing backend or frontend stack overlays.
 
 ## When to Activate
 
 Activate when commander delegates Phase 2 (Project Planning) after the
-researcher's requirements document has been approved by gatekeeper-design.
+researcher's requirements document has been approved by gatekeeper-design, or
+when a user directly requests a delivery plan, milestones, rollout strategy,
+or risk register for an already understood scope.
+
+---
+
+## Execution Modes
+
+### Pipeline Mode (Commander-Delegated)
+
+In pipeline mode delegated by commander, do NOT submit to `gatekeeper-design`
+yourself. Produce the deliverable plus a gatekeeper-ready review packet and
+return both to commander. Commander owns the review cycle.
+
+### Standalone Mode (Direct User Activation)
+
+When activated directly by a user, this skill owns the final review loop for
+its own deliverable. Produce the project plan, submit it to
+`gatekeeper-design`, address any REVISE findings, and return the approved
+result plus the final review report.
 
 ---
 
@@ -36,6 +56,7 @@ Read the gatekeeper-design-approved SRS and domain analysis. Extract:
 - Non-functional requirements (performance, security, compliance constraints)
 - Domain complexity (number of bounded contexts, integration points)
 - Stated constraints (timeline, budget, team size, regulatory deadlines)
+- Explicit technology constraints/preferences captured by researcher
 
 ### Step 2: Define Project Phases
 
@@ -101,6 +122,10 @@ Specify the progressive deployment approach:
 4. **Monitoring gates**: Which metrics must be healthy to proceed at each stage
 5. **Communication plan**: Who is notified at each rollout stage
 
+Define rollout prerequisites in terms of approved requirements, architecture
+readiness, and known technical constraints. Do not assume a finalized backend
+or frontend stack if it has not yet been locked by later phases.
+
 ### Step 6: Define Technology Decision Timeline
 
 Map when technology decisions must be finalized:
@@ -113,10 +138,24 @@ Map when technology decisions must be finalized:
 | CI/CD platform | Phase 1 | Blocks pipeline setup | Engineer |
 | Hosting/deployment | Phase 2 | Blocks staging environment | Engineer |
 
-### Step 7: Submit to Gatekeeper
+Make the distinction explicit:
+- The planner defines decision deadlines, rollout prerequisites, and risk impact
+- The planner does NOT finalize backend/runtime or frontend overlay selection
 
-Package the complete project plan and submit to `gatekeeper-design` for review.
-Address any REVISE findings and resubmit until APPROVED.
+### Step 7: Prepare Review Handoff
+
+Package the complete project plan with a review packet containing:
+- Source skill: `planner`
+- Deliverable produced
+- Approved upstream context used
+- Explicit tech constraints/preferences carried forward from research
+- Decision gates and rollout prerequisites called out in the plan
+
+If operating in pipeline mode, return the deliverable and review packet to
+commander for gatekeeper submission.
+
+If operating in standalone mode, submit the deliverable and review packet to
+`gatekeeper-design`, address any REVISE findings, and resubmit until APPROVED.
 
 ---
 
@@ -132,6 +171,12 @@ The planner produces one consolidated deliverable:
 5. Rollout strategy with feature flag lifecycle
 6. Technology decision timeline
 7. Resource assumptions
+8. Explicit technology constraints and rollout prerequisites
+
+In pipeline mode, return the deliverable with a gatekeeper-ready review packet.
+
+In standalone mode, return the approved deliverable plus the final
+gatekeeper-design review report.
 
 ---
 

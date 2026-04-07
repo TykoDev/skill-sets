@@ -9,6 +9,7 @@ description: >
   covering design, functionality, complexity, tests, naming, comments,
   style, and documentation using Google's 8-dimension framework with
   risk-tiered PR assessment.
+version: 1.0.0
 ---
 
 # Code Reviewing Specialist
@@ -43,7 +44,7 @@ Consult `references/review-dimensions.md` for detailed guidance, common mistakes
 
 Before beginning line-by-line review, assess the PR at the structural level.
 
-**Size Check.** Target 200–400 lines of code per PR. PRs under 100 lines review fastest and most thoroughly. PRs exceeding 1,000 lines should be split — recommend logical splitting strategies (by layer, by feature, by refactor-then-feature). Teams with PRs averaging 50 lines ship 40% more code than teams exceeding 200 lines. For large features, recommend stacked PRs.
+**Size Check.** Target 200–400 lines of code per PR. PRs under 100 lines review fastest and most thoroughly. PRs exceeding 400 lines should trigger a size warning. PRs exceeding 1,000 lines MUST be split — recommend logical splitting strategies (by layer, by feature, by refactor-then-feature). Teams with PRs averaging 50 lines ship 40% more code than teams exceeding 200 lines. For large features, recommend stacked PRs. Record the size classification in the report (Small <100, Medium 100-400, Large 400-1000, Oversized >1000).
 
 **Risk Tier Assignment.** Classify the change as Low, Medium, or High risk:
 - **Low:** Configuration changes, documentation, cosmetic fixes, test-only changes
@@ -65,15 +66,17 @@ Follow these steps in order for each code review.
 
 **Step 1: Read the PR Description.** Understand the intent before reading code. Review the linked issue or requirement. Verify the PR description explains what changed and why.
 
-**Step 2: Assess Design at the Architectural Level.** Start with the highest-impact dimension. Evaluate whether the approach is fundamentally sound before examining implementation details. If the design is wrong, file-level feedback is wasted effort.
+**Step 2: AI-Generated Code Detection.** Assess whether the code appears to be AI-generated. Indicators include: uniform variable naming patterns, overly verbose comments restating the code, missing edge case handling, generic error messages, and suspiciously complete but shallow implementations. If AI generation is suspected, apply heightened scrutiny to: edge case handling, error path completeness, business logic correctness, and whether the code truly fits the project's patterns rather than being generic boilerplate. Document AI-generation suspicion in the report.
 
-**Step 3: Walk Through the Code File by File.** Read the diff systematically. For large PRs, start with the files most central to the change (usually identified in the PR description), then move to supporting files.
+**Step 3: Assess Design at the Architectural Level.** Start with the highest-impact dimension. Evaluate whether the approach is fundamentally sound before examining implementation details. If the design is wrong, file-level feedback is wasted effort.
 
-**Step 4: Apply the 8 Dimensions Checklist.** For each significant code section, evaluate against all 8 dimensions. Record findings as they arise — do not rely on memory for a second pass.
+**Step 4: Walk Through the Code File by File.** Read the diff systematically. For large PRs, start with the files most central to the change (usually identified in the PR description), then move to supporting files.
 
-**Step 5: Check CI Gate Results.** Review lint, test, SAST, and SCA results from the CI pipeline. Do not duplicate work that automation has already performed. If CI gates passed, focus human attention on design, logic, and architecture — not formatting.
+**Step 5: Apply the 8 Dimensions Checklist.** For each significant code section, evaluate against all 8 dimensions. Record findings as they arise — do not rely on memory for a second pass.
 
-**Step 6: Formulate Feedback.** Organize findings by severity and dimension. Apply the feedback conventions described below.
+**Step 6: Check CI Gate Results.** Review lint, test, SAST, and SCA results from the CI pipeline. Do not duplicate work that automation has already performed. If CI gates passed, focus human attention on design, logic, and architecture — not formatting.
+
+**Step 7: Formulate Feedback.** Organize findings by severity and dimension. Apply the feedback conventions described below.
 
 ## Feedback Conventions
 
@@ -132,9 +135,45 @@ Structure the code review report as follows:
 [Brief explanation of the overall assessment and any conditions for approval]
 ```
 
-## Handoff to Gatekeeper
+Append the following structured summary block at the end of every report for
+pipeline consumption:
 
-After completing the code review report, submit it to the `gatekeeper-code` skill for adversarial validation. If no `gatekeeper-code` skill is available, self-validate the review by confirming each of the 8 dimensions was assessed and the risk tier assignment is justified by the actual change scope. The gatekeeper-code will challenge whether all dimensions were thoroughly assessed, whether the risk tier matches the actual change scope, and whether blocking items were correctly identified or missed.
+```
+---
+## Pipeline Summary (Machine-Readable)
+
+phase_id: 2
+skill: code-review
+status: COMPLETE
+risk_assessment: [High / Medium / Low]
+finding_count:
+  blocking: [n]
+  nit: [n]
+  optional: [n]
+  question: [n]
+checklist_coverage: [8/8 dimensions assessed]
+verdict: [Approve / Approve with Nits / Request Changes]
+key_concerns: [top 3 blocking items, one line each]
+cross_references: [file:line pairs flagged for cross-skill attention]
+---
+```
+
+
+## Pipeline Integration
+
+**When invoked by code-chief (pipeline mode):**
+- Receive delegation with review target scope, Phase 1 context, and technology stack
+- Execute the full 8-dimension review workflow
+- Submit the completed report to code-chief (not directly to gatekeeper-code)
+- Include the structured pipeline summary block at the end of the report
+- Code-chief owns the gatekeeper-code validation cycle in pipeline mode
+
+**When invoked standalone:**
+- Execute the full 8-dimension review workflow independently
+- Submit the completed report to `gatekeeper-code` for adversarial validation
+- If no `gatekeeper-code` skill is available, self-validate by confirming each of the 8 dimensions was assessed and the risk tier assignment is justified by the actual change scope
+
+In both modes, the gatekeeper-code will challenge whether all dimensions were thoroughly assessed, whether the risk tier matches the actual change scope, and whether blocking items were correctly identified or missed.
 
 ## Additional Resources
 

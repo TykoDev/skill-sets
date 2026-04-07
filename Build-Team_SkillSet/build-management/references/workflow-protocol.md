@@ -2,7 +2,7 @@
 
 ## State Machine Definition
 
-Build-management operates as a deterministic state machine. Each state has defined entry conditions, actions, and exit transitions. No state may be skipped without explicit documentation.
+Build-management operates as a deterministic state machine. Each state has defined entry conditions, actions, and exit transitions. In the canonical workflow, no mandatory phase may be skipped.
 
 ### State Diagram
 
@@ -11,9 +11,11 @@ INTAKE ──► PHASE_1_BUILD ──► PHASE_1_GATE ──┐
                                               │
            ┌──────────────────────────────────┘
            │
-           ├─[APPROVED]──► PHASE_2_TEST ──► PHASE_2_GATE ──┐
-           │                                                 │
-           └─[REVISE]───► PHASE_1_BUILD (retry)             │
+           ├─[APPROVED: initial implementation]──► PHASE_2_TEST ──► PHASE_2_GATE ──┐
+           │                                                                          │
+           ├─[APPROVED: security remediation re-validation]──► PHASE_4_COMPLETENESS │
+           │                                                                          │
+           └─[REVISE]───► PHASE_1_BUILD (retry / security remediation)               │
                                               ┌──────────────┘
                                               │
            ┌──────────────────────────────────┘
@@ -27,14 +29,18 @@ INTAKE ──► PHASE_1_BUILD ──► PHASE_1_GATE ──┐
            │
            ├─[APPROVED]──► PHASE_4_COMPLETENESS ──► PHASE_4_GATE ──┐
            │                                                         │
-           └─[REVISE]───► PHASE_1_BUILD (remediation)               │
+           ├─[APPROVED, has remediation]──► PHASE_1_BUILD (security remediation)    │
+           │                                                                          │
+           └─[REVISE]───► PHASE_3_SECURITY (retry)                                    │
                                               ┌──────────────────────┘
                                               │
            ┌──────────────────────────────────┘
            │
-           ├─[CLEAN]────► CONSOLIDATION ──► DELIVERED
+           ├─[CLEAN]────► PHASE_4_GATE ──► [APPROVED] ──► CONSOLIDATION ──► DELIVERED
+           │                                  │
+           │                                  └─[REVISE]──► PHASE_4_COMPLETENESS (re-scan / amend report)
            │
-           └─[FINDINGS]─► PHASE_1_BUILD (remediation) ──► re-scan
+           └─[FINDINGS]─► PHASE_1_BUILD (completeness remediation) ──► PHASE_4_COMPLETENESS
 ```
 
 ### State Transition Table
@@ -42,8 +48,11 @@ INTAKE ──► PHASE_1_BUILD ──► PHASE_1_GATE ──┐
 | Current State | Event | Next State | Action |
 |---------------|-------|------------|--------|
 | INTAKE | Spec validated, user confirmed | PHASE_1_BUILD | Delegate to bob-the-builder |
-| PHASE_1_BUILD | Code complete | PHASE_1_GATE | Submit to gatekeeper-build |
-| PHASE_1_GATE | APPROVED | PHASE_2_TEST | Delegate to test-builder |
+| PHASE_1_BUILD | Code complete (initial implementation) | PHASE_1_GATE | Submit to gatekeeper-build |
+| PHASE_1_BUILD | Code complete (security remediation) | PHASE_1_GATE | Submit updated code to gatekeeper-build for remediation re-validation |
+| PHASE_1_BUILD | Code complete (completeness remediation) | PHASE_4_COMPLETENESS | Re-run cross-check-build-confirm |
+| PHASE_1_GATE | APPROVED (initial implementation) | PHASE_2_TEST | Delegate to test-builder |
+| PHASE_1_GATE | APPROVED (security remediation re-validation) | PHASE_4_COMPLETENESS | Resume canonical pipeline after validated security fixes |
 | PHASE_1_GATE | REVISE (attempt < 3) | PHASE_1_BUILD | Return findings to bob-the-builder |
 | PHASE_1_GATE | REVISE (attempt = 3) | ESCALATE | Present findings to user |
 | PHASE_1_GATE | ESCALATE | INTAKE | Re-scope with user |
@@ -55,9 +64,14 @@ INTAKE ──► PHASE_1_BUILD ──► PHASE_1_GATE ──┐
 | PHASE_3_GATE | APPROVED, no remediation | PHASE_4_COMPLETENESS | Delegate to cross-check |
 | PHASE_3_GATE | APPROVED, has remediation | PHASE_1_BUILD | Route remediation to bob-the-builder |
 | PHASE_3_GATE | REVISE (attempt < 3) | PHASE_3_SECURITY | Return findings to security-builder |
-| PHASE_4_COMPLETENESS | CLEAN | CONSOLIDATION | Compile delivery package |
+| PHASE_3_GATE | REVISE (attempt = 3) | ESCALATE | Present findings to user |
+| PHASE_4_COMPLETENESS | CLEAN | PHASE_4_GATE | Submit completeness report to gatekeeper-build |
 | PHASE_4_COMPLETENESS | FINDINGS (cycle < 2) | PHASE_1_BUILD | Delegate to bob-the-builder |
 | PHASE_4_COMPLETENESS | FINDINGS (cycle = 2) | ESCALATE | Present findings to user |
+| PHASE_4_GATE | APPROVED | CONSOLIDATION | Compile delivery package |
+| PHASE_4_GATE | REVISE (cycle < 2) | PHASE_4_COMPLETENESS | Return findings to cross-check-build-confirm |
+| PHASE_4_GATE | REVISE (cycle = 2) | ESCALATE | Present findings to user |
+| PHASE_4_GATE | ESCALATE | ESCALATE | Present findings to user |
 | CONSOLIDATION | Package assembled | DELIVERED | Deliver to user |
 
 ---
@@ -72,7 +86,7 @@ Maintain a revision counter for each phase:
 Phase 1 (bob-the-builder):          attempt 0/3
 Phase 2 (test-builder):             attempt 0/3
 Phase 3 (security-builder):         attempt 0/3
-Phase 4 (cross-check-build-confirm): cycle 0/2
+Phase 4 (cross-check-build-confirm + gatekeeper-build): cycle 0/2
 ```
 
 ### Revision Rules
@@ -108,29 +122,18 @@ When escalating to the user:
 
 ---
 
-## Phase Skip Handling
+## Mandatory Phase Enforcement
 
-### Skip Conditions
+The canonical workflow is fail-closed:
 
-A phase may be skipped when its deliverable already exists or is not applicable. Document every skip.
+- Phase 1 implementation is mandatory
+- Phase 2 testing is mandatory
+- Phase 3 security audit is mandatory
+- Phase 4 completeness scanning is mandatory
+- Every phase output must be reviewed by `gatekeeper-build`
 
-| Phase | Skip Condition | Documentation Required |
-|-------|---------------|----------------------|
-| Phase 2 (test-builder) | Comprehensive tests already exist and pass | Test coverage report, test run output |
-| Phase 3 (security-builder) | External security audit completed recently | Audit report reference, date, scope |
-| Phase 4 (cross-check) | Codebase is a minor patch (< 20 LOC changed) | Change manifest showing scope |
-
-### Skip Documentation Format
-
-```markdown
-## PHASE SKIP NOTICE
-
-### Phase Skipped: [Phase N — Name]
-### Reason: [Detailed justification]
-### Evidence: [Test reports, audit references, or scope analysis]
-### Risk Assessment: [What risks are accepted by skipping]
-### Approved By: [User confirmation if required]
-```
+If any mandatory phase or gatekeeper review cannot run, build-management must
+escalate to the user and stop the pipeline.
 
 ---
 
@@ -152,7 +155,6 @@ Each specialist receives only what it needs — not the entire accumulated histo
 Build-management MUST prevent context bloat by:
 - Passing only approved deliverables (not revision history) to downstream skills
 - Summarizing gatekeeper reports rather than forwarding full text when only key findings are relevant
-- Excluding skipped phase documentation from downstream handoffs
 - Forwarding gatekeeper findings exactly as-is when delegating remediation (no modification)
 
 ---
@@ -163,9 +165,9 @@ Build-management MUST prevent context bloat by:
 
 Before marking DELIVERED, build-management must verify:
 
-1. **Phase completion**: All non-skipped phases reached APPROVED status
+1. **Phase completion**: All four phases reached APPROVED status
 2. **Remediation closure**: All security remediation items are addressed and re-validated
-3. **Completeness certification**: cross-check-build-confirm issued a CLEAN verdict
+3. **Completeness certification**: cross-check-build-confirm issued a CLEAN verdict and `gatekeeper-build` approved Phase 4
 4. **Consistency**: No contradictions between phase outputs (e.g., security findings that were not actually fixed)
 5. **Traceability**: Every requirement from the design spec maps to implemented code
 
@@ -182,6 +184,7 @@ Maintain a running log of all phase transitions:
 | [time] | PHASE_1_BUILD | Delegated to bob-the-builder | Code delivered |
 | [time] | PHASE_1_GATE | Submitted to gatekeeper-build | APPROVED |
 | [time] | PHASE_2_TEST | Delegated to test-builder | Tests delivered |
+| [time] | PHASE_4_GATE | Submitted completeness report to gatekeeper-build | APPROVED |
 ```
 
 ---
@@ -200,9 +203,9 @@ If a specialist skill fails to produce output (timeout, error, or incomplete del
 
 If gatekeeper-build is unavailable:
 
-1. Build-management performs a self-review using the gatekeeper's review dimensions (spec alignment, code quality, security, testing, documentation, completeness, correctness)
-2. Document the self-review explicitly as a "Self-Gate" with reduced confidence
-3. Recommend the user run a manual gatekeeper review before deploying
+1. Stop the pipeline immediately
+2. Escalate to the user that the canonical workflow cannot continue without `gatekeeper-build`
+3. Do not self-approve or self-gate any phase output
 
 ### Conflict Between Phases
 

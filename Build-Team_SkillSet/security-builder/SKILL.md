@@ -22,7 +22,9 @@ It examines actual implemented code — not designs or specifications — for
 vulnerabilities, insecure patterns, and compliance gaps. Every finding is mapped
 to established security frameworks and includes actionable remediation guidance.
 Security findings that require code changes are packaged separately for routing
-to bob-the-builder through build-management.
+to bob-the-builder through build-management. Security Builder is a specialist
+phase in the canonical pipeline, not a final approver — its output is not
+accepted until `gatekeeper-build` validates it through build-management.
 
 ## Core Principle
 
@@ -201,6 +203,22 @@ Structure the security audit report as follows:
 - Input entry points traced: [N]/[total]
 - Endpoints with auth verification: [N]/[total]
 ```
+
+---
+
+## Handoff to Gatekeeper
+
+Submit the security audit through build-management for mandatory
+`gatekeeper-build` review. The audit is not accepted until the gatekeeper issues
+`APPROVED`.
+
+If the approved audit includes remediation items, build-management routes those
+items to `bob-the-builder`, then sends the updated code back to
+`gatekeeper-build` for re-validation before the canonical workflow may advance to
+`cross-check-build-confirm`.
+
+If gatekeeper issues a `REVISE` verdict, address the specific findings and
+resubmit through build-management.
 
 ---
 

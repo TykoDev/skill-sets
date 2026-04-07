@@ -6,10 +6,12 @@ description: >
   "gate the review", "quality-check the review output", "run the gatekeeper-code",
   "verify the bug report", "challenge the security findings", or
   "ensure review correctness". It is the adversarial meta-reviewer that
-  challenges reports from bug-review, code-review, quality-review, and
-  security-review skills. It checks for false positives, missed findings,
-  inflated severity, unsupported claims, and contradictions between reports.
+  challenges reports from all six specialist review skills: bug-review,
+  code-review, quality-review, security-review, mr-robot, and frontier.
+  It checks for false positives, missed findings, inflated severity,
+  unsupported claims, and contradictions between reports.
   Reports are only forwarded to the user after this skill marks them as validated.
+version: 1.0.0
 ---
 
 # Adversarial Report Validator (Gatekeeper)
@@ -58,7 +60,10 @@ Verify that the skill applied its full checklist and did not skip categories wit
 - Compare the report's "Checklist Coverage" section against the skill's documented checklist (in its `references/checklist.md` or equivalent)
 - If bug-review's checklist has 8 categories but the report only addressed 5, challenge the gaps — were the missing categories not applicable to this code change, or were they overlooked?
 - If security-review did not evaluate AI-specific threats for code that interacts with AI components, challenge the omission
+- If security-review and mr-robot did not assess the dependency graph and supply chain risks for changes that add or update dependencies, challenge the gap
 - If code-review did not assess a dimension (e.g., Documentation) without justification, flag it
+- If mr-robot did not perform supply chain attack simulation for codebases with significant external dependencies, challenge the omission
+- If frontier was invoked but did not assess all 5 domains for frontend code, challenge any skipped domains without justification
 
 ### 4. Proportionality Challenge
 
@@ -88,7 +93,7 @@ When a challenge identifies an issue, construct a delegation request and send it
 
 ```
 DELEGATION REQUEST
-Target Skill:    [bug-review | code-review | quality-review | security-review]
+Target Skill:    [bug-review | code-review | quality-review | security-review | mr-robot | frontier]
 Finding ID:      [ID from original report, or "GAP-" prefix for missing findings]
 Challenge Type:  [existence | accuracy | completeness | proportionality | consistency]
 Specific Question: [Precise, answerable question the skill must address]
@@ -128,11 +133,12 @@ After validating each report individually, perform cross-skill consistency analy
 **Build the Cross-Validation Matrix.** Map every changed file and function against findings from all invoked skills:
 
 ```
-| File/Function     | bug-review    | code-review   | quality-review | security-review | Status      |
-|-------------------|---------------|---------------|----------------|-----------------|-------------|
-| auth/login.py:42  | BUG-003 (Maj) | —             | —              | SEC-001 (Crit)  | Check overlap|
-| utils/parse.py    | —             | CR-Design (Nit)| QR-Drift (Maj)| —               | Contradiction?|
-| api/handler.py    | —             | —             | —              | —               | Gap?        |
+| File/Function     | bug-review    | code-review   | quality-review | security-review | mr-robot      | frontier      | Status      |
+|-------------------|---------------|---------------|----------------|-----------------|---------------|---------------|-------------|
+| auth/login.py:42  | BUG-003 (Maj) | —             | —              | SEC-001 (Crit)  | MR-005 (Crit) | —             | Check overlap|
+| utils/parse.py    | —             | CR-Design (Nit)| QR-Drift (Maj)| —               | —             | —             | Contradiction?|
+| api/handler.py    | —             | —             | —              | —               | MR-009 (High) | —             | Gap?        |
+| components/App.tsx| —             | —             | —              | —               | —             | FR-003 (Maj)  | Frontend only|
 ```
 
 **Detect Overlaps.** When multiple skills flag the same code area, verify severity consistency. An input validation issue found by both bug-review (as a boundary condition bug) and security-review (as an injection vulnerability) may warrant the higher severity — but both should agree on the core finding.
@@ -194,6 +200,12 @@ Structure the gatekeeper validation report as follows:
 #### security-review
 - [same structure]
 
+#### mr-robot
+- [same structure]
+
+#### frontier
+- [same structure]
+
 ### Cross-Validation Findings
 - Overlaps: [findings flagged by multiple skills with severity reconciliation]
 - Gaps: [code areas with no coverage, with justification or challenge]
@@ -218,6 +230,23 @@ The gatekeeper must also guard against its own biases to remain a useful quality
 **Track calibration metrics.** Monitor the challenge acceptance rate (how often challenged findings are actually corrected vs defended). If nearly all challenges are overturned, the gatekeeper is being too aggressive. If none are overturned, it is not adding value. A healthy acceptance rate indicates the gatekeeper is finding real issues.
 
 **Respect evidence.** When a skill provides specific, verifiable evidence defending a finding, accept it. Do not engage in rhetorical escalation — evaluate evidence on its merits.
+
+## Pipeline Integration
+
+**When invoked by code-chief (pipeline mode):**
+- Receive the consolidated multi-skill review package from code-chief
+- Validate all phase reports in a single pass, applying the 5-challenge protocol to each
+- Build the cross-validation matrix across all submitted skill reports (up to 6 skills)
+- Route all delegation requests back through code-chief (not directly to skills)
+- Code-chief forwards skill responses back to gatekeeper-code for verdict
+
+**When invoked standalone (by a specialist skill directly):**
+- Receive a single skill’s report for adversarial validation
+- Apply the 5-challenge protocol to that report
+- Route delegation requests directly to the originating skill
+- Cross-validation is limited to the submitted reports only
+
+The pipeline mode is the canonical path when code-chief is orchestrating. Standalone mode is the fallback when individual skills are invoked outside the code-chief pipeline.
 
 ## Additional Resources
 

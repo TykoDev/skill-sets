@@ -18,13 +18,32 @@ This skill performs the first phase of the Dev Design SkillSet pipeline.
 It transforms raw user input into structured, testable requirements and a
 domain model. The output is a Software Requirements Specification (SRS)
 and Domain Analysis document that becomes the foundation for all downstream
-skills (planner, architect, designer, engineer).
+skills (planner, architect, designer, engineer). It captures hard user
+technology constraints and preferences in the requirements set, but it does
+not select a tech-stack overlay.
 
 ## When to Activate
 
 Activate when commander delegates Phase 1 (Requirements & Domain Analysis)
 or when a user directly requests requirements gathering, domain modeling,
 or stakeholder analysis for a new software project.
+
+---
+
+## Execution Modes
+
+### Pipeline Mode (Commander-Delegated)
+
+In pipeline mode delegated by commander, do NOT submit to `gatekeeper-design`
+yourself. Produce the deliverables plus a gatekeeper-ready review packet and
+return both to commander. Commander owns the review cycle.
+
+### Standalone Mode (Direct User Activation)
+
+When activated directly by a user, this skill owns the final review loop for
+its own deliverables. Produce the deliverables, submit them to
+`gatekeeper-design`, address any REVISE findings, and return the approved
+result plus the final review report.
 
 ---
 
@@ -38,6 +57,8 @@ From the commander's delegation (or direct user input), extract:
 - **Business context**: What problem does this solve? What value does it create?
 - **Constraints**: Budget, timeline, regulatory, technical, team limits
 - **Existing systems**: What integrations or migrations are involved?
+- **Hard tech constraints/preferences**: User-mandated runtimes, cloud providers,
+  languages, frameworks, hosting limits, or forbidden technologies
 
 If critical information is missing, note it as an open question rather than
 inventing assumptions. Prefer explicit gaps over implicit guesses.
@@ -118,11 +139,25 @@ The document MUST include:
 9. Out-of-scope items
 10. Open questions and ambiguities
 
-### Step 7: Submit to Gatekeeper
+Add a dedicated subsection for **Technology Constraints and Preferences** that
+records only user-specified requirements, prohibitions, or preferences. Do not
+choose backend or frontend overlays in this phase.
 
-Package the completed SRS and domain analysis documents and submit to
-`gatekeeper-design` for adversarial review. Address any REVISE findings and
-resubmit until APPROVED.
+### Step 7: Prepare Review Handoff
+
+Package the completed SRS and domain analysis documents with a review packet
+containing:
+- Source skill: `researcher`
+- Deliverables produced
+- Original user request or commander delegation summary
+- Hard technology constraints/preferences captured from the user
+- Open questions and assumptions
+
+If operating in pipeline mode, return the deliverables and review packet to
+commander for gatekeeper submission.
+
+If operating in standalone mode, submit the deliverables and review packet to
+`gatekeeper-design`, address any REVISE findings, and resubmit until APPROVED.
 
 ---
 
@@ -134,6 +169,11 @@ The researcher produces two deliverables:
 2. **Domain Analysis** — Bounded context map, domain events, aggregate boundaries
 
 Both follow the templates in the references directory.
+
+In pipeline mode, return both deliverables with a gatekeeper-ready review packet.
+
+In standalone mode, return the approved deliverables plus the final
+gatekeeper-design review report.
 
 ---
 
