@@ -4,6 +4,8 @@
   <em>Modular AI agent skill libraries for autonomous software design, implementation, and review</em>
 </p>
 
+!!! I HAVE RELEASED A NEW MORE ADVANCED VERSION HERE -> https://github.com/TykoDev/SupremeTeam !!!
+
 <p align="center">
   <a href="https://youtu.be/NE5zkgg04pQ" target="_blank" rel="noopener noreferrer">
     <img src="https://img.youtube.com/vi/NE5zkgg04pQ/maxresdefault.jpg" alt="Watch the AI SkillSets video overview" width="720" />
